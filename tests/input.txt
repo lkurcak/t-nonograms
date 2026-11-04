@@ -1,0 +1,48 @@
+help
+list
+f 1 1
+play 1
+hint
+f 3 1-5
+f 1-5 3
+x 1 1-2
+check
+f 2 2
+hint
+undo
+undo
+f 2 2-4
+f 4 2-4
+f 1 1
+play heart
+f 1 1
+check
+hint
+c 1 1
+hint
+f 9 1
+f 1 0-2
+f one 1
+solve
+f 1 1
+load
+1, 2, 2 1, 2, 0
+2, 2, 1 1, 1, 1
+solve
+load
+1, 1
+1, 1
+load
+2, 0
+0, 2
+load
+1, x
+1
+new 6 4 11
+solve
+play 99
+play nothing
+frobnicate
+
+quit
+show
