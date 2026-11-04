@@ -7,8 +7,7 @@ use core::num::{wrapping_add, wrapping_mul};
 use crate::grid::{Board, Puzzle};
 use crate::line::Cell;
 use crate::parse;
-use crate::solve;
-use crate::solve::{Answer, Spread};
+use crate::solve::{self, Answer, Spread};
 
 /// A picture drawn here: its name, and its rows, one a line, `#` for a
 /// filled cell and `.` for an empty one.
@@ -148,8 +147,7 @@ pub fn picture(i: usize) -> Option<Puzzle> {
 /// The picture named `name`, as a puzzle.
 pub fn named(name: &str) -> Option<Puzzle> {
     let mut i: usize = 0;
-    let pictures = PICTURES;
-    for pic in pictures.iter() {
+    for pic in PICTURES.iter() {
         if pic.name == name {
             return picture(i);
         }

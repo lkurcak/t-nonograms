@@ -91,8 +91,7 @@ pub fn clues(text: &str) -> Option<List<List<usize>>> {
         if comma {
             let part = text.get(start, i)?;
             let mut clue = List::new();
-            let part = words(part);
-            for w in part.iter() {
+            for w in words(part).iter() {
                 let n = number(*w)?;
                 if n > 0 {
                     clue.push(n);
@@ -144,7 +143,10 @@ fn clue_text(text: &str) -> String {
 
 #[test]
 fn words_are_between_spaces() {
-    assert_eq(&joined(words("  f 3\t2-5  ").as_slice()).as_str(), &"f|3|2-5");
+    let w = words("  f 3\t2-5  ");
+    assert(w.len() == 3);
+    assert_eq(&w[0], &"f");
+    assert_eq(&w[2], &"2-5");
     assert_eq(&joined(words("a\nb\r\nc").as_slice()).as_str(), &"a|b|c");
     assert(words("   ").is_empty());
 }

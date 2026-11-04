@@ -4,8 +4,7 @@
 use alloc::list::List;
 
 use crate::grid::{Board, Puzzle};
-use crate::line;
-use crate::line::{Cell, Outcome};
+use crate::line::{self, Cell, Outcome};
 
 /// What solving a puzzle found.
 #[derive(Discard)]
