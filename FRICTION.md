@@ -225,6 +225,11 @@ pub fn same_clue(a: &[usize], b: &[usize]) -> bool {
 `same_clue` is gone, `grid.t` compares the slices with `!=`. Printing an
 `Option` in `assert_eq` waits for a `Debug` trait (t-lang step 43.1).
 
+**Fixed** in 0.59.0 (step 43.1): `assert_eq` says its sides by `Debug`,
+which `Option` has and `#[derive(Debug)]` gives `Span`, so the tests
+compare `Option`s and `Span`s whole: `assert_eq(&span("3", 5),
+&Option::Some(Span { lo: 2, hi: 2 }))`.
+
 ## Reading text: no `split`, `trim` or parsing numbers — gap
 
 `str` has `chars`, `split_at`, `get(lo, hi)`, `as_bytes`, and that's all.
@@ -281,6 +286,15 @@ its job, so this may just be the price of that; but it means a game, or
 any search, should be compiled. `t test` takes 2 s for 13 tests, most of it
 the test that solves every picture. `tests/run.sh` runs the transcript both
 ways.
+
+## Holes in format strings hold only places — unsure
+
+0.59.0's `f".."` replaced every chain of `out.put(..)?` in `main.t`
+(26 lines became 12): `out.line(&f"Puzzle: {p.name}, {p.width}x{p.height}")?`.
+But a hole names a variable or a field, nothing more, so `row {i / w + 1}`
+is a `let row = i / w + 1;` first, three times here. The docs say why (a
+hole never runs code, so it can't hide a `panic`); it reads fine, but
+it's the one thing I reached for that wasn't there.
 
 ## What worked
 

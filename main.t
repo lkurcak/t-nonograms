@@ -220,9 +220,8 @@ fn run(
             };
             match first_mistake(&game.board, solution) {
                 Option::Some(i) => {
-                    out.put(&"Something's wrong; look again at row ")?;
-                    out.put(&(i / game.board.width + 1))?;
-                    out.line(&".")
+                    let row = i / game.board.width + 1;
+                    out.line(&f"Something's wrong; look again at row {row}.")
                 },
                 Option::None => out.line(&"Nothing's wrong so far."),
             }
@@ -259,9 +258,7 @@ fn arg(args: &[&str], i: usize) -> Option<usize> { parse::number(*args.get(i)?) 
 
 /// Says how a command is written.
 fn usage(out: &mut Stdout, how: &str) -> Result<(), std::io::Error> {
-    out.put(&"Write it as `")?;
-    out.put(&how)?;
-    out.line(&"`.")
+    out.line(&f"Write it as `{how}`.")
 }
 
 /// The game being played, or `None`, having said why there's none.
@@ -300,12 +297,7 @@ fn start(out: &mut Stdout, s: &mut Session, p: Puzzle) -> Result<(), std::io::Er
             Option::None
         },
     };
-    out.put(&"Puzzle: ")?;
-    out.put(&p.name)?;
-    out.put(&", ")?;
-    out.put(&p.width)?;
-    out.put(&"x")?;
-    out.line(&p.height)?;
+    out.line(&f"Puzzle: {p.name}, {p.width}x{p.height}")?;
     show::board(out, &p, &board)?;
     s.game = Option::Some(Game { puzzle: p, board, history: List::new(), solution, over: false });
     Result::Ok(())
@@ -359,11 +351,9 @@ fn first_mistake(board: &Board, solution: &Board) -> Option<usize> {
 fn hint(out: &mut Stdout, game: &mut Game) -> Result<(), std::io::Error> {
     if let Option::Some(solution) = &game.solution {
         if let Option::Some(i) = first_mistake(&game.board, solution) {
-            out.put(&"Row ")?;
-            out.put(&(i / game.board.width + 1))?;
-            out.put(&", column ")?;
-            out.put(&(i % game.board.width + 1))?;
-            return out.line(&" is wrong.");
+            let row = i / game.board.width + 1;
+            let column = i % game.board.width + 1;
+            return out.line(&f"Row {row}, column {column} is wrong.");
         }
     }
     let Option::Some(step) = solve::next_step(&game.puzzle, &game.board) else {
@@ -371,18 +361,14 @@ fn hint(out: &mut Stdout, game: &mut Game) -> Result<(), std::io::Error> {
             &"No row or column says anything more on its own; something must be guessed.",
         );
     };
+    let row = step.y + 1;
+    let column = step.x + 1;
+    let state = if step.cell == Cell::Filled { "filled" } else { "empty" };
     if step.by_row {
-        out.put(&"Row ")?;
-        out.put(&(step.y + 1))?;
-        out.put(&" says column ")?;
-        out.put(&(step.x + 1))?;
+        out.line(&f"Row {row} says column {column} is {state}.")?;
     } else {
-        out.put(&"Column ")?;
-        out.put(&(step.x + 1))?;
-        out.put(&" says row ")?;
-        out.put(&(step.y + 1))?;
+        out.line(&f"Column {column} says row {row} is {state}.")?;
     }
-    out.line(&if step.cell == Cell::Filled { " is filled." } else { " is empty." })?;
     game.history.push(game.board.copy());
     game.board.set(step.x, step.y, step.cell);
     moved(out, game)

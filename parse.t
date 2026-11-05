@@ -18,7 +18,7 @@ pub fn words(line: &str) -> List<&str> {
 pub fn number(s: &str) -> Option<usize> { s.parse().ok() }
 
 /// Numbers `lo` to `hi`, both included.
-#[derive(Copy, Discard)]
+#[derive(Copy, Debug, Discard, Eq)]
 pub struct Span { pub lo: usize, pub hi: usize }
 
 /// A number, `5`, or a range of them, `2-7` (or `7-2`), each at least 1
@@ -108,25 +108,21 @@ fn words_are_between_spaces() {
 
 #[test]
 fn numbers_are_digits_that_fit() {
-    assert_eq(&number("42").unwrap_or(0), &42);
-    assert(number("").is_none());
-    assert(number("4a").is_none());
-    assert(number("-1").is_none());
-    assert(number("99999999999999999999999").is_none());
+    assert_eq(&number("42"), &Option::Some(42));
+    assert_eq(&number(""), &Option::None);
+    assert_eq(&number("4a"), &Option::None);
+    assert_eq(&number("-1"), &Option::None);
+    assert_eq(&number("99999999999999999999999"), &Option::None);
 }
 
 #[test]
 fn spans_count_from_one_and_stay_on_the_board() {
-    let s = span("3", 5).unwrap();
-    assert_eq(&s.lo, &2);
-    assert_eq(&s.hi, &2);
-    let s = span("5-2", 5).unwrap();
-    assert_eq(&s.lo, &1);
-    assert_eq(&s.hi, &4);
-    assert(span("0", 5).is_none());
-    assert(span("6", 5).is_none());
-    assert(span("2-", 5).is_none());
-    assert(span("-", 5).is_none());
+    assert_eq(&span("3", 5), &Option::Some(Span { lo: 2, hi: 2 }));
+    assert_eq(&span("5-2", 5), &Option::Some(Span { lo: 1, hi: 4 }));
+    assert_eq(&span("0", 5), &Option::None);
+    assert_eq(&span("6", 5), &Option::None);
+    assert_eq(&span("2-", 5), &Option::None);
+    assert_eq(&span("-", 5), &Option::None);
 }
 
 #[test]
