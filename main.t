@@ -220,8 +220,7 @@ fn run(
             };
             match first_mistake(&game.board, solution) {
                 Option::Some(i) => {
-                    let row = i / game.board.width + 1;
-                    out.line(&f"Something's wrong; look again at row {row}.")
+                    out.line(&f"Something's wrong; look again at row {i / game.board.width + 1}.")
                 },
                 Option::None => out.line(&"Nothing's wrong so far."),
             }
@@ -351,9 +350,8 @@ fn first_mistake(board: &Board, solution: &Board) -> Option<usize> {
 fn hint(out: &mut Stdout, game: &mut Game) -> Result<(), std::io::Error> {
     if let Option::Some(solution) = &game.solution {
         if let Option::Some(i) = first_mistake(&game.board, solution) {
-            let row = i / game.board.width + 1;
-            let column = i % game.board.width + 1;
-            return out.line(&f"Row {row}, column {column} is wrong.");
+            let w = game.board.width;
+            return out.line(&f"Row {i / w + 1}, column {i % w + 1} is wrong.");
         }
     }
     let Option::Some(step) = solve::next_step(&game.puzzle, &game.board) else {
@@ -361,13 +359,11 @@ fn hint(out: &mut Stdout, game: &mut Game) -> Result<(), std::io::Error> {
             &"No row or column says anything more on its own; something must be guessed.",
         );
     };
-    let row = step.y + 1;
-    let column = step.x + 1;
     let state = if step.cell == Cell::Filled { "filled" } else { "empty" };
     if step.by_row {
-        out.line(&f"Row {row} says column {column} is {state}.")?;
+        out.line(&f"Row {step.y + 1} says column {step.x + 1} is {state}.")?;
     } else {
-        out.line(&f"Column {column} says row {row} is {state}.")?;
+        out.line(&f"Column {step.x + 1} says row {step.y + 1} is {state}.")?;
     }
     game.history.push(game.board.copy());
     game.board.set(step.x, step.y, step.cell);
