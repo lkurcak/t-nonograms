@@ -27,19 +27,22 @@ transcript() {
              }' tests/input.txt -
 }
 
+# `t main.t` compiles the game; `--interp` runs it in the interpreter,
+# which checks as it goes what the checker proved.
 if [ "${BLESS:-}" = 1 ]; then
-    transcript t main.t > tests/expected.txt
+    transcript t --interp main.t > tests/expected.txt
     echo "wrote tests/expected.txt"
     exit 0
 fi
 
-transcript t main.t > tests/actual.txt
+transcript t --interp main.t > tests/actual.txt
 if ! diff -u tests/expected.txt tests/actual.txt; then
     echo "FAIL: output differs from tests/expected.txt"
     exit 1
 fi
 
-# Compiled through C, it must do just what the interpreter does.
+# Compiled through C, as `t main.t` runs it, it must do just what the
+# interpreter does.
 t build -o tests/nonograms main.t
 transcript tests/nonograms > tests/actual.txt
 if ! diff -u tests/expected.txt tests/actual.txt; then

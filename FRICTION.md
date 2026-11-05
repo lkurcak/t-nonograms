@@ -296,6 +296,10 @@ is a `let row = i / w + 1;` first, three times here. The docs say why (a
 hole never runs code, so it can't hide a `panic`); it reads fine, but
 it's the one thing I reached for that wasn't there.
 
+*0.60.0:* a hole holds any expression now (`{i / w + 1}`), and the three
+`let`s are gone; `#![warn(format_hole_expressions)]` would bring the old
+rule back, as a lint, for a program that wants it.
+
 ## What worked
 
 - **The borrow checker.** I didn't get a single borrow error. Returning
