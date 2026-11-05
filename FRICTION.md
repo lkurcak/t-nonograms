@@ -11,7 +11,8 @@ code that hit it. Each entry is labelled:
 
 The log is evidence for t-lang's plans, not a design for them.
 
-Written against `t` 0.55.0.
+Written against `t` 0.55.0. Entries marked **fixed** say in which
+release, and what the code looks like now.
 
 ## A game can only read lines — gap
 
@@ -70,6 +71,10 @@ The table reads well, and the `match` on `Command` is checked for
 exhaustiveness, which a `match` on strings wouldn't be. But it's 35 lines
 where Rust would need a dozen. The error message says "yet", so this is
 expected.
+
+**Fixed** in 0.57.0 (t-lang step 42): string literals are patterns on
+`&str`. `command` in `main.t` is now the `match` above, 18 lines, and the
+`Word` table is gone; a `_` arm is still needed, which is right.
 
 ## No tuples — gap (known)
 
@@ -141,6 +146,12 @@ part.iter()`. Rust keeps a `for` head's temporaries alive for the loop, and
 T could too. The error and its suggestion are clear, so it's a small cost,
 paid five times here.
 
+**Fixed** in 0.57.0: a `for` now keeps its head's temporaries for the
+loop, as Rust does. `for l in HELP.iter()`, `for pic in PICTURES.iter()`
+and `for w in words(part).iter()` are written as such. (`let pictures =
+PICTURES;` is still there where the value is used after a `let .. else`,
+which is right: that's a `let`.)
+
 ## Two-dimensional indexing can't be proved — by design
 
 A board is a `List<Cell>`, row by row, and a cell is `cells[y * width +
@@ -185,6 +196,9 @@ step 30), and `assert(ok: bool) with panic ensures ok` would say so; then
 tests could index after asserting a length. The tests compare joined
 strings instead (`"f|3|2-5"`), which is arguably clearer, but it was a
 detour.
+
+**Fixed** in 0.57.0: `assert(ok)` ensures `ok`, so
+`words_are_between_spaces` asserts the length and then indexes.
 
 ## No `Eq` for slices, lists or `Option` — gap
 
@@ -232,7 +246,8 @@ didn't block anything.
   `core::ops::Range`"; it's `0..10usize`. By design (integers have no
   default type), and the error says what to write.
 - `use crate::line::{self, Cell}` isn't allowed ("`self` can only start a
-  path"): it's two `use`s. Gap, small.
+  path"): it's two `use`s. Gap, small. **Fixed** in 0.57.0; `solve.t` and
+  `puzzles.t` use it.
 - `List` has no `first()`; its slice does, so it's
   `words.as_slice().first()`. `List` doesn't deref to a slice, so
   `as_slice()` is everywhere. Unsure: is there to be a `Deref`?

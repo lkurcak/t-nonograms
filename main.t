@@ -50,44 +50,25 @@ const HELP: [&str; 22] = [
 #[derive(Copy, Discard, Eq)]
 enum Command { Help, Quit, List, Play, New, Load, Mark(Cell), Undo, Hint, Check, Solve, Show }
 
-/// A word for a command.
-#[derive(Copy, Discard)]
-struct Word { word: &'static str, command: Command }
-
-const WORDS: [Word; 22] = [
-    Word { word: "help", command: Command::Help },
-    Word { word: "h", command: Command::Help },
-    Word { word: "?", command: Command::Help },
-    Word { word: "quit", command: Command::Quit },
-    Word { word: "q", command: Command::Quit },
-    Word { word: "exit", command: Command::Quit },
-    Word { word: "list", command: Command::List },
-    Word { word: "play", command: Command::Play },
-    Word { word: "p", command: Command::Play },
-    Word { word: "new", command: Command::New },
-    Word { word: "load", command: Command::Load },
-    Word { word: "f", command: Command::Mark(Cell::Filled) },
-    Word { word: "fill", command: Command::Mark(Cell::Filled) },
-    Word { word: "x", command: Command::Mark(Cell::Empty) },
-    Word { word: "cross", command: Command::Mark(Cell::Empty) },
-    Word { word: "c", command: Command::Mark(Cell::Unknown) },
-    Word { word: "clear", command: Command::Mark(Cell::Unknown) },
-    Word { word: "undo", command: Command::Undo },
-    Word { word: "hint", command: Command::Hint },
-    Word { word: "check", command: Command::Check },
-    Word { word: "solve", command: Command::Solve },
-    Word { word: "show", command: Command::Show },
-];
-
 /// The command `word` names.
 fn command(word: &str) -> Option<Command> {
-    let words = WORDS;
-    for w in words.iter() {
-        if w.word == word {
-            return Option::Some(w.command);
-        }
-    }
-    Option::None
+    Option::Some(match word {
+        "help" | "h" | "?" => Command::Help,
+        "quit" | "q" | "exit" => Command::Quit,
+        "list" => Command::List,
+        "play" | "p" => Command::Play,
+        "new" => Command::New,
+        "load" => Command::Load,
+        "fill" | "f" => Command::Mark(Cell::Filled),
+        "cross" | "x" => Command::Mark(Cell::Empty),
+        "clear" | "c" => Command::Mark(Cell::Unknown),
+        "undo" => Command::Undo,
+        "hint" => Command::Hint,
+        "check" => Command::Check,
+        "solve" => Command::Solve,
+        "show" => Command::Show,
+        _ => return Option::None,
+    })
 }
 
 /// A puzzle being played.
@@ -145,8 +126,7 @@ fn run(
 ) -> Result<(), std::io::Error> {
     match c {
         Command::Help => {
-            let help = HELP;
-            for l in help.iter() {
+            for l in HELP.iter() {
                 out.line(l)?;
             }
             Result::Ok(())
