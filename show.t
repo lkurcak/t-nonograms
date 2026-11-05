@@ -122,7 +122,7 @@ pub fn board<W: Write>(w: &mut W, p: &Puzzle, board: &Board) -> Result<(), W::Er
                 spaces(w, cw)?;
             } else {
                 let i = t + len - depth;
-                number(w, c.get(i).map(|b| *b).unwrap_or(0), cw)?;
+                number(w, c.get(i).copied().unwrap_or(0), cw)?;
             }
         }
         w.write_char('\n')?;

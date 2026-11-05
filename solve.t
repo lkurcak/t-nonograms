@@ -187,10 +187,7 @@ pub fn next_step(p: &Puzzle, board: &Board) -> Option<Step> {
         if let Outcome::Changed(_) = line::solve(p.row(y), line.as_mut_slice()) {
             for x in 0..p.width {
                 let now = board.get(x, y);
-                let then = match line.get(x) {
-                    Option::Some(c) => *c,
-                    Option::None => now,
-                };
+                let then = line.get(x).copied().unwrap_or(now);
                 if now != then {
                     return Option::Some(Step { x, y, cell: then, by_row: true });
                 }
@@ -202,10 +199,7 @@ pub fn next_step(p: &Puzzle, board: &Board) -> Option<Step> {
         if let Outcome::Changed(_) = line::solve(p.col(x), line.as_mut_slice()) {
             for y in 0..p.height {
                 let now = board.get(x, y);
-                let then = match line.get(y) {
-                    Option::Some(c) => *c,
-                    Option::None => now,
-                };
+                let then = line.get(y).copied().unwrap_or(now);
                 if now != then {
                     return Option::Some(Step { x, y, cell: then, by_row: false });
                 }

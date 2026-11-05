@@ -56,12 +56,7 @@ impl Table {
 }
 
 /// What's known of cell `i` of `line`, with the cell past its end empty.
-fn at(line: &[Cell], i: usize) -> Cell {
-    match line.get(i) {
-        Option::Some(c) => *c,
-        Option::None => Cell::Empty,
-    }
-}
+fn at(line: &[Cell], i: usize) -> Cell { line.get(i).copied().unwrap_or(Cell::Empty) }
 
 /// Can cell `i` be empty, as far as is known?
 fn may_be_empty(line: &[Cell], i: usize) -> bool { at(line, i) != Cell::Filled }
