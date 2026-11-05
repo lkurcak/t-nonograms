@@ -220,6 +220,11 @@ pub fn same_clue(a: &[usize], b: &[usize]) -> bool {
 &Option::Some(42))` can't be written; it's `assert_eq(&number("42").unwrap_or(0),
 &42)`. (`#[derive(Eq)]` on my own enums worked fine.)
 
+**Fixed** in 0.58.0 (t-lang step 43), mostly: `==` on slices, arrays,
+`Option` and `Result` turned out to work all along; `List` has `Eq` now.
+`same_clue` is gone, `grid.t` compares the slices with `!=`. Printing an
+`Option` in `assert_eq` waits for a `Debug` trait (t-lang step 43.1).
+
 ## Reading text: no `split`, `trim` or parsing numbers — gap
 
 `str` has `chars`, `split_at`, `get(lo, hi)`, `as_bytes`, and that's all.
@@ -228,6 +233,13 @@ pub fn same_clue(a: &[usize], b: &[usize]) -> bool {
 commas, then words): 90 lines, all over byte indexes. Each is a few lines
 in Rust's std. tcalc wrote its own lexer, which is fair for a calculator;
 here it's just reading `f 3 2-5`.
+
+**Fixed** in 0.58.0: `str` has `split`, `split_whitespace`, `lines`,
+`trim`, `find`, `strip_prefix` and friends, and `parse`. `words` is a loop
+over `split_whitespace`, `number` is `s.parse().ok()` (so it now takes a
+`+`, as Rust's does), `span` uses `find('-')` and `strip_prefix('-')`, and
+`clues` is `split(',')` then `split_whitespace`: the reading part of
+`parse.t` went from 107 lines to 62.
 
 The numbers part was pleasant, though: `let '0'..='9' = c else { return
 Option::None };` tells the checker `c as u32 - 0x30` can't underflow, and
@@ -251,9 +263,12 @@ didn't block anything.
 - `List` has no `first()`; its slice does, so it's
   `words.as_slice().first()`. `List` doesn't deref to a slice, so
   `as_slice()` is everywhere. Unsure: is there to be a `Deref`?
+  **Fixed** in 0.58.0: `List` has `first`, `last` and `contains`; no
+  `Deref`, by design (no implicit conversions).
 - `match l.get(i) { Option::Some(c) => *c, Option::None => d }` appears a
   dozen times; `Option<&T>` has no `copied()`. `.map(|c| *c).unwrap_or(d)`
-  works, and is what I'd use next time. Gap, small.
+  works, and is what I'd use next time. Gap, small. **Fixed** in 0.58.0:
+  `line.get(i).copied().unwrap_or(Cell::Empty)`.
 - Writing into a `String` with `Write` gives a `Result<(), !>`, so it's
   `text.put(&n).into_ok()`. Sound and explicit; unsure whether it's worth a
   method that doesn't return a `Result`.

@@ -100,7 +100,7 @@ fn main(os: Os) -> Result<(), std::io::Error> {
     out.put(&"> ")?;
     while input.read_line(&mut line)? {
         let words = parse::words(line.as_str());
-        if let Option::Some(first) = words.as_slice().first() {
+        if let Option::Some(first) = words.first() {
             let args = match words.as_slice().split_at(1) {
                 Option::Some(parts) => parts.tail,
                 Option::None => core::slice::empty(),

@@ -35,10 +35,7 @@ impl Board {
         if x >= self.width {
             return Cell::Empty;
         }
-        match self.cells.get(y * self.width + x) {
-            Option::Some(c) => *c,
-            Option::None => Cell::Empty,
-        }
+        self.cells.get(y * self.width + x).copied().unwrap_or(Cell::Empty)
     }
 
     /// Makes the cell in column `x` of row `y` `c`, if there's one there.
@@ -184,13 +181,13 @@ impl Puzzle {
         let mut line = List::new();
         for y in 0..self.height {
             board.row(y, &mut line);
-            if !same_clue(clue_of(line.as_slice()).as_slice(), self.row(y)) {
+            if clue_of(line.as_slice()).as_slice() != self.row(y) {
                 return false;
             }
         }
         for x in 0..self.width {
             board.col(x, &mut line);
-            if !same_clue(clue_of(line.as_slice()).as_slice(), self.col(x)) {
+            if clue_of(line.as_slice()).as_slice() != self.col(x) {
                 return false;
             }
         }
@@ -214,19 +211,4 @@ pub fn clue_of(line: &[Cell]) -> List<usize> {
         clue.push(run);
     }
     clue
-}
-
-/// Are the two clues the same?
-pub fn same_clue(a: &[usize], b: &[usize]) -> bool {
-    if a.len() != b.len() {
-        return false;
-    }
-    let mut i: usize = 0;
-    while i < a.len() && i < b.len() {
-        if a[i] != b[i] {
-            return false;
-        }
-        i = i + 1;
-    }
-    true
 }

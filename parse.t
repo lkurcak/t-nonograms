@@ -4,43 +4,18 @@ use alloc::list::List;
 use alloc::string::String;
 use core::fmt::Write;
 
-/// The words of `line`: what's between spaces, tabs and line breaks.
+/// The words of `line`: what's between whitespace.
 pub fn words(line: &str) -> List<&str> {
     let mut out = List::new();
-    let bytes = line.as_bytes();
-    let mut start: usize = 0;
-    let mut i: usize = 0;
-    while i <= bytes.len() {
-        let gap = match bytes.get(i) {
-            Option::Some(b) => *b == b' ' || *b == b'\t' || *b == b'\n' || *b == b'\r',
-            Option::None => true,
-        };
-        if gap {
-            if start < i {
-                if let Option::Some(w) = line.get(start, i) {
-                    out.push(w);
-                }
-            }
-            start = i + 1;
-        }
-        i = i + 1;
+    for w in line.split_whitespace() {
+        out.push(w);
     }
     out
 }
 
-/// The number `s` writes in decimal, if it's only digits and fits.
-pub fn number(s: &str) -> Option<usize> {
-    if s.is_empty() {
-        return Option::None;
-    }
-    let mut n: usize = 0;
-    for c in s.chars() {
-        let '0'..='9' = c else { return Option::None };
-        let d = (c as u32 - 0x30) as usize;
-        n = checked_add(checked_mul(n, 10)?, d)?;
-    }
-    Option::Some(n)
-}
+/// The number `s` writes in decimal, if it's only digits (and maybe a
+/// `+`) and fits.
+pub fn number(s: &str) -> Option<usize> { s.parse().ok() }
 
 /// Numbers `lo` to `hi`, both included.
 #[derive(Copy, Discard)]
@@ -49,15 +24,7 @@ pub struct Span { pub lo: usize, pub hi: usize }
 /// A number, `5`, or a range of them, `2-7` (or `7-2`), each at least 1
 /// and at most `most`, as a span counted from 0.
 pub fn span(s: &str, most: usize) -> Option<Span> {
-    let mut dash: Option<usize> = Option::None;
-    let mut i: usize = 0;
-    for b in s.as_bytes().iter() {
-        if *b == b'-' {
-            dash = Option::Some(i);
-        }
-        i = i + 1;
-    }
-    let Span { lo, hi } = match dash {
+    let Span { lo, hi } = match s.find('-') {
         Option::None => {
             let n = number(s)?;
             Span { lo: n, hi: n }
@@ -65,7 +32,7 @@ pub fn span(s: &str, most: usize) -> Option<Span> {
         Option::Some(d) => {
             let parts = s.split_at(d)?;
             let a = number(parts.head)?;
-            let b = number(parts.tail.get(1, parts.tail.len())?)?;
+            let b = number(parts.tail.strip_prefix('-')?)?;
             if a <= b { Span { lo: a, hi: b } } else { Span { lo: b, hi: a } }
         },
     };
@@ -80,27 +47,15 @@ pub fn span(s: &str, most: usize) -> Option<Span> {
 /// nothing) for a line with none. `None` if anything else is in it.
 pub fn clues(text: &str) -> Option<List<List<usize>>> {
     let mut out = List::new();
-    let bytes = text.as_bytes();
-    let mut start: usize = 0;
-    let mut i: usize = 0;
-    while i <= bytes.len() {
-        let comma = match bytes.get(i) {
-            Option::Some(b) => *b == b',',
-            Option::None => true,
-        };
-        if comma {
-            let part = text.get(start, i)?;
-            let mut clue = List::new();
-            for w in words(part).iter() {
-                let n = number(*w)?;
-                if n > 0 {
-                    clue.push(n);
-                }
+    for part in text.split(',') {
+        let mut clue = List::new();
+        for w in part.split_whitespace() {
+            let n = number(w)?;
+            if n > 0 {
+                clue.push(n);
             }
-            out.push(clue);
-            start = i + 1;
         }
-        i = i + 1;
+        out.push(clue);
     }
     Option::Some(out)
 }
