@@ -25,11 +25,11 @@ pub struct Span { pub lo: usize, pub hi: usize }
 /// and at most `most`, as a span counted from 0.
 pub fn span(s: &str, most: usize) -> Option<Span> {
     let Span { lo, hi } = match s.find('-') {
-        Option::None => {
+        None => {
             let n = number(s)?;
             Span { lo: n, hi: n }
         },
-        Option::Some(d) => {
+        Some(d) => {
             let parts = s.split_at(d)?;
             let a = number(parts.head)?;
             let b = number(parts.tail.strip_prefix('-')?)?;
@@ -37,9 +37,9 @@ pub fn span(s: &str, most: usize) -> Option<Span> {
         },
     };
     if lo == 0 || hi > most {
-        return Option::None;
+        return None;
     }
-    Option::Some(Span { lo: lo - 1, hi: hi - 1 })
+    Some(Span { lo: lo - 1, hi: hi - 1 })
 }
 
 /// Clues for several lines, written `1 2, 3, 0, 1 1 1`: the lines apart
@@ -57,7 +57,7 @@ pub fn clues(text: &str) -> Option<List<List<usize>>> {
         }
         out.push(clue);
     }
-    Option::Some(out)
+    Some(out)
 }
 
 /// `parts`, with `|` between.
@@ -76,7 +76,7 @@ fn joined(parts: &[&str]) -> String {
 
 /// What `clues` reads from `text`, written back with `|` between lines.
 fn clue_text(text: &str) -> String {
-    let Option::Some(lines) = clues(text) else { return String::from("none") };
+    let Some(lines) = clues(text) else { return String::from("none") };
     let mut s = String::new();
     let mut first = true;
     for l in lines.iter() {
@@ -108,21 +108,21 @@ fn words_are_between_spaces() {
 
 #[test]
 fn numbers_are_digits_that_fit() {
-    assert_eq(&number("42"), &Option::Some(42));
-    assert_eq(&number(""), &Option::None);
-    assert_eq(&number("4a"), &Option::None);
-    assert_eq(&number("-1"), &Option::None);
-    assert_eq(&number("99999999999999999999999"), &Option::None);
+    assert_eq(&number("42"), &Some(42));
+    assert_eq(&number(""), &None);
+    assert_eq(&number("4a"), &None);
+    assert_eq(&number("-1"), &None);
+    assert_eq(&number("99999999999999999999999"), &None);
 }
 
 #[test]
 fn spans_count_from_one_and_stay_on_the_board() {
-    assert_eq(&span("3", 5), &Option::Some(Span { lo: 2, hi: 2 }));
-    assert_eq(&span("5-2", 5), &Option::Some(Span { lo: 1, hi: 4 }));
-    assert_eq(&span("0", 5), &Option::None);
-    assert_eq(&span("6", 5), &Option::None);
-    assert_eq(&span("2-", 5), &Option::None);
-    assert_eq(&span("-", 5), &Option::None);
+    assert_eq(&span("3", 5), &Some(Span { lo: 2, hi: 2 }));
+    assert_eq(&span("5-2", 5), &Some(Span { lo: 1, hi: 4 }));
+    assert_eq(&span("0", 5), &None);
+    assert_eq(&span("6", 5), &None);
+    assert_eq(&span("2-", 5), &None);
+    assert_eq(&span("-", 5), &None);
 }
 
 #[test]

@@ -300,6 +300,20 @@ it's the one thing I reached for that wasn't there.
 `let`s are gone; `#![warn(format_hole_expressions)]` would bring the old
 rule back, as a lint, for a program that wants it.
 
+## Every variant written with its enum — unsure
+
+`Option::`/`Result::` came to 141 of the program's 1,693 lines, and
+`Command::` 27 more in `main.t`'s dispatch. The docs say why (Rust's
+`None =>` that binds a variable), and the rule caught nothing here, but
+it's most of what a `match` says.
+
+*0.61.0:* in a pattern a name that starts with an uppercase letter is a
+variant, never a variable, so variants can be imported: `Some`/`None`/
+`Ok`/`Err` come with the prelude, and `main.t` imports `Command::{..}`
+and `line::Cell::{..}`. Not `solve::Answer`, whose `None` would hide
+`Option`'s, nor `Outcome` and `Spread` together, which both have a
+`Contradiction`.
+
 ## What worked
 
 - **The borrow checker.** I didn't get a single borrow error. Returning
