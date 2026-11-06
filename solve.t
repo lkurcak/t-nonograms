@@ -80,8 +80,8 @@ fn settle(p: &Puzzle, board: &mut Board, rows: &mut List<bool>, cols: &mut List<
 /// Is `marks[i]` set? Unsets it.
 fn take(marks: &mut List<bool>, i: usize) -> bool {
     match marks.get_mut(i) {
-        Option::Some(m) => core::mem::replace(m, false),
-        Option::None => false,
+        Some(m) => core::mem::replace(m, false),
+        None => false,
     }
 }
 
@@ -90,7 +90,7 @@ fn mark_changes(before: &[Cell], after: &[Cell], across: &mut List<bool>) {
     let mut i: usize = 0;
     while i < before.len() && i < after.len() {
         if before[i] != after[i] {
-            if let Option::Some(m) = across.get_mut(i) {
+            if let Some(m) = across.get_mut(i) {
                 *m = true;
             }
         }
@@ -127,17 +127,17 @@ struct Search {
 }
 
 /// Solves `p`, from what `start` says, finding up to two solutions.
-/// `Option::None` if it gave up first.
+/// `None` if it gave up first.
 pub fn solve(p: &Puzzle, start: &Board) -> Option<Answer> {
-    let mut search = Search { first: Option::None, second: false, budget: BUDGET };
+    let mut search = Search { first: None, second: false, budget: BUDGET };
     let complete = explore(p, start.copy(), &mut search);
     let Search { first, second, .. } = search;
     if !complete {
-        return Option::None;
+        return None;
     }
-    Option::Some(match first {
-        Option::None => Answer::None,
-        Option::Some(b) => if second { Answer::Many(b) } else { Answer::Unique(b) },
+    Some(match first {
+        None => Answer::None,
+        Some(b) => if second { Answer::Many(b) } else { Answer::Unique(b) },
     })
 }
 
@@ -148,11 +148,11 @@ fn explore(p: &Puzzle, mut board: Board, search: &mut Search) -> bool {
     if by_lines(p, &mut board) == Spread::Contradiction {
         return true;
     }
-    let Option::Some(i) = board.first_unknown() else {
+    let Some(i) = board.first_unknown() else {
         if search.first.is_some() {
             search.second = true;
         } else {
-            search.first = Option::Some(board);
+            search.first = Some(board);
         }
         return true;
     };
@@ -189,7 +189,7 @@ pub fn next_step(p: &Puzzle, board: &Board) -> Option<Step> {
                 let now = board.get(x, y);
                 let then = line.get(x).copied().unwrap_or(now);
                 if now != then {
-                    return Option::Some(Step { x, y, cell: then, by_row: true });
+                    return Some(Step { x, y, cell: then, by_row: true });
                 }
             }
         }
@@ -201,12 +201,12 @@ pub fn next_step(p: &Puzzle, board: &Board) -> Option<Step> {
                 let now = board.get(x, y);
                 let then = line.get(y).copied().unwrap_or(now);
                 if now != then {
-                    return Option::Some(Step { x, y, cell: then, by_row: false });
+                    return Some(Step { x, y, cell: then, by_row: false });
                 }
             }
         }
     }
-    Option::None
+    None
 }
 
 /// The puzzle with these clues, as `parse::clues` reads them.
@@ -222,10 +222,10 @@ fn clued(rows: &str, cols: &str) -> Puzzle {
 fn verdict(rows: &str, cols: &str) -> &'static str {
     let p = clued(rows, cols);
     match solve(&p, &Board::new(p.width, p.height)) {
-        Option::Some(Answer::None) => "none",
-        Option::Some(Answer::Unique(b)) => if p.solved_by(&b) { "unique" } else { "wrong" },
-        Option::Some(Answer::Many(b)) => if p.solved_by(&b) { "many" } else { "wrong" },
-        Option::None => "gave up",
+        Some(Answer::None) => "none",
+        Some(Answer::Unique(b)) => if p.solved_by(&b) { "unique" } else { "wrong" },
+        Some(Answer::Many(b)) => if p.solved_by(&b) { "many" } else { "wrong" },
+        None => "gave up",
     }
 }
 

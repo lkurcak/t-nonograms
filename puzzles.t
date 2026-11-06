@@ -5,9 +5,9 @@ use core::fmt::Write;
 use core::num::{wrapping_add, wrapping_mul};
 
 use crate::grid::{Board, Puzzle};
-use crate::line::Cell;
 use crate::parse;
 use crate::solve::{self, Answer, Spread};
+use crate::line::Cell::{Empty, Filled};
 
 /// A picture drawn here: its name, and its rows, one a line, `#` for a
 /// filled cell and `.` for an empty one.
@@ -99,7 +99,7 @@ pub fn count() -> usize { PICTURES.len() }
 /// The name of picture `i`, from 0, and its size.
 pub fn describe(i: usize, out: &mut String) {
     let pictures = PICTURES;
-    let Option::Some(pic) = pictures.get(i) else { return };
+    let Some(pic) = pictures.get(i) else { return };
     out.push_str(pic.name);
     out.push_str(" (");
     let board = draw(pic.rows);
@@ -125,11 +125,11 @@ fn draw(text: &str) -> Board {
     for r in rows.iter() {
         let mut x: usize = 0;
         for c in r.chars() {
-            board.set(x, y, if c == '#' { Cell::Filled } else { Cell::Empty });
+            board.set(x, y, if c == '#' { Filled } else { Empty });
             x = x + 1;
         }
         while x < width {
-            board.set(x, y, Cell::Empty);
+            board.set(x, y, Empty);
             x = x + 1;
         }
         y = y + 1;
@@ -141,7 +141,7 @@ fn draw(text: &str) -> Board {
 pub fn picture(i: usize) -> Option<Puzzle> {
     let pictures = PICTURES;
     let pic = pictures.get(i)?;
-    Option::Some(Puzzle::of(pic.name, &draw(pic.rows)))
+    Some(Puzzle::of(pic.name, &draw(pic.rows)))
 }
 
 /// The picture named `name`, as a puzzle.
@@ -153,7 +153,7 @@ pub fn named(name: &str) -> Option<Puzzle> {
         }
         i = i + 1;
     }
-    Option::None
+    None
 }
 
 /// Random numbers: SplitMix64, which is good enough for pictures, and is
@@ -187,22 +187,22 @@ const TRIES: usize = 500;
 /// the first with one solution; or `None` if there was none of that
 /// either.
 pub fn random(rng: &mut Rng, width: usize, height: usize) -> Option<Puzzle> {
-    let mut fallback: Option<Puzzle> = Option::None;
+    let mut fallback: Option<Puzzle> = None;
     for _ in 0..TRIES {
         let mut picture = Board::new(width, height);
         for y in 0..height {
             for x in 0..width {
-                picture.set(x, y, if rng.chance(60) { Cell::Filled } else { Cell::Empty });
+                picture.set(x, y, if rng.chance(60) { Filled } else { Empty });
             }
         }
         let p = Puzzle::of("random", &picture);
         let mut board = Board::new(width, height);
         if solve::by_lines(&p, &mut board) == Spread::Settled && board.unknowns() == 0 {
-            return Option::Some(p);
+            return Some(p);
         }
         if fallback.is_none() {
-            if let Option::Some(Answer::Unique(_)) = solve::solve(&p, &Board::new(width, height)) {
-                fallback = Option::Some(p);
+            if let Some(Answer::Unique(_)) = solve::solve(&p, &Board::new(width, height)) {
+                fallback = Some(p);
             }
         }
     }
@@ -214,7 +214,7 @@ fn every_picture_has_one_solution() {
     for i in 0..count() {
         let p = picture(i).unwrap();
         match solve::solve(&p, &Board::new(p.width, p.height)) {
-            Option::Some(Answer::Unique(b)) => assert(p.solved_by(&b)),
+            Some(Answer::Unique(b)) => assert(p.solved_by(&b)),
             _ => panic("not unique"),
         }
     }

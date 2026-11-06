@@ -17,7 +17,7 @@
 use core::fmt::Write;
 
 use crate::grid::{Board, Puzzle};
-use crate::line::Cell;
+use crate::line::Cell::{Empty, Filled, Unknown};
 
 /// How many digits `n` has in decimal.
 fn digits(n: usize) -> usize {
@@ -35,7 +35,7 @@ fn spaces<W: Write>(w: &mut W, n: usize) -> Result<(), W::Error> {
     for _ in 0..n {
         w.write_char(' ')?;
     }
-    Result::Ok(())
+    Ok(())
 }
 
 /// Writes `n` right-aligned in `width` columns.
@@ -78,7 +78,7 @@ fn clue<W: Write>(w: &mut W, clue: &[usize]) -> Result<(), W::Error> {
         first = false;
         w.put(b)?;
     }
-    Result::Ok(())
+    Ok(())
 }
 
 /// Writes `board`, with `p`'s clues around it.
@@ -136,9 +136,9 @@ pub fn board<W: Write>(w: &mut W, p: &Puzzle, board: &Board) -> Result<(), W::Er
         for x in 0..p.width {
             spaces(w, cw - 1)?;
             w.write_char(match board.get(x, y) {
-                Cell::Unknown => '.',
-                Cell::Filled => '#',
-                Cell::Empty => 'x',
+                Unknown => '.',
+                Filled => '#',
+                Empty => 'x',
             })?;
         }
         number(w, y + 1, digits(p.height) + 2)?;
@@ -169,14 +169,14 @@ pub fn picture<W: Write>(w: &mut W, board: &Board) -> Result<(), W::Error> {
         // Up to the last filled cell, so no line ends in spaces.
         let mut end: usize = 0;
         for x in 0..board.width {
-            if board.get(x, y) == Cell::Filled {
+            if board.get(x, y) == Filled {
                 end = x + 1;
             }
         }
         for x in 0..end {
-            w.write_str(if board.get(x, y) == Cell::Filled { "##" } else { "  " })?;
+            w.write_str(if board.get(x, y) == Filled { "##" } else { "  " })?;
         }
         w.write_char('\n')?;
     }
-    Result::Ok(())
+    Ok(())
 }

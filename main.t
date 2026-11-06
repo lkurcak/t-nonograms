@@ -13,6 +13,8 @@ use grid::{Board, Puzzle};
 use line::Cell;
 use puzzles::Rng;
 use solve::Answer;
+use Command::{Check, Help, Hint, List, Load, Mark, New, Play, Quit, Show, Solve, Undo};
+use line::Cell::{Empty, Filled, Unknown};
 
 mod grid;
 mod line;
@@ -52,22 +54,22 @@ enum Command { Help, Quit, List, Play, New, Load, Mark(Cell), Undo, Hint, Check,
 
 /// The command `word` names.
 fn command(word: &str) -> Option<Command> {
-    Option::Some(match word {
-        "help" | "h" | "?" => Command::Help,
-        "quit" | "q" | "exit" => Command::Quit,
-        "list" => Command::List,
-        "play" | "p" => Command::Play,
-        "new" => Command::New,
-        "load" => Command::Load,
-        "fill" | "f" => Command::Mark(Cell::Filled),
-        "cross" | "x" => Command::Mark(Cell::Empty),
-        "clear" | "c" => Command::Mark(Cell::Unknown),
-        "undo" => Command::Undo,
-        "hint" => Command::Hint,
-        "check" => Command::Check,
-        "solve" => Command::Solve,
-        "show" => Command::Show,
-        _ => return Option::None,
+    Some(match word {
+        "help" | "h" | "?" => Help,
+        "quit" | "q" | "exit" => Quit,
+        "list" => List,
+        "play" | "p" => Play,
+        "new" => New,
+        "load" => Load,
+        "fill" | "f" => Mark(Filled),
+        "cross" | "x" => Mark(Empty),
+        "clear" | "c" => Mark(Unknown),
+        "undo" => Undo,
+        "hint" => Hint,
+        "check" => Check,
+        "solve" => Solve,
+        "show" => Show,
+        _ => return None,
     })
 }
 
@@ -94,21 +96,21 @@ struct Session { game: Option<Game>, rng: Rng }
 fn main(os: Os) -> Result<(), std::io::Error> {
     let mut input = os.stdin;
     let mut out = os.stdout;
-    let mut session = Session { game: Option::None, rng: Rng::new(2026) };
+    let mut session = Session { game: None, rng: Rng::new(2026) };
     let mut line = String::new();
     out.line(&"Nonograms. Type `help` for the commands, or `play 1` to start.")?;
     out.put(&"> ")?;
     while input.read_line(&mut line)? {
         let words = parse::words(line.as_str());
-        if let Option::Some(first) = words.first() {
+        if let Some(first) = words.first() {
             let args = match words.as_slice().split_at(1) {
-                Option::Some(parts) => parts.tail,
-                Option::None => core::slice::empty(),
+                Some(parts) => parts.tail,
+                None => core::slice::empty(),
             };
             match command(*first) {
-                Option::Some(Command::Quit) => return Result::Ok(()),
-                Option::Some(c) => run(&mut out, &mut input, &mut session, c, args)?,
-                Option::None => out.line(&"There's no such command; `help` lists them.")?,
+                Some(Quit) => return Ok(()),
+                Some(c) => run(&mut out, &mut input, &mut session, c, args)?,
+                None => out.line(&"There's no such command; `help` lists them.")?,
             }
         }
         out.put(&"> ")?;
@@ -125,14 +127,14 @@ fn run(
     args: &[&str],
 ) -> Result<(), std::io::Error> {
     match c {
-        Command::Help => {
+        Help => {
             for l in HELP.iter() {
                 out.line(l)?;
             }
-            Result::Ok(())
+            Ok(())
         },
-        Command::Quit => Result::Ok(()),
-        Command::List => {
+        Quit => Ok(()),
+        List => {
             for i in 0..puzzles::count() {
                 let mut text = String::new();
                 text.put(&(i + 1)).into_ok();
@@ -140,36 +142,34 @@ fn run(
                 puzzles::describe(i, &mut text);
                 out.line(&text)?;
             }
-            Result::Ok(())
+            Ok(())
         },
-        Command::Play => {
-            let Option::Some(which) = args.first() else {
-                return usage(out, "play N, or play NAME")
-            };
+        Play => {
+            let Some(which) = args.first() else { return usage(out, "play N, or play NAME") };
             let p = match parse::number(*which) {
-                Option::Some(n) => if n == 0 { Option::None } else { puzzles::picture(n - 1) },
-                Option::None => puzzles::named(*which),
+                Some(n) => if n == 0 { None } else { puzzles::picture(n - 1) },
+                None => puzzles::named(*which),
             };
             match p {
-                Option::Some(p) => start(out, s, p),
-                Option::None => out.line(&"There's no such puzzle; `list` lists them."),
+                Some(p) => start(out, s, p),
+                None => out.line(&"There's no such puzzle; `list` lists them."),
             }
         },
-        Command::New => {
-            let Option::Some(w) = arg(args, 0) else { return usage(out, "new W H [SEED]") };
-            let Option::Some(h) = arg(args, 1) else { return usage(out, "new W H [SEED]") };
+        New => {
+            let Some(w) = arg(args, 0) else { return usage(out, "new W H [SEED]") };
+            let Some(h) = arg(args, 1) else { return usage(out, "new W H [SEED]") };
             if w == 0 || h == 0 || w > 30 || h > 30 {
                 return out.line(&"A random puzzle is 1 to 30 cells wide and high.");
             }
-            if let Option::Some(seed) = arg(args, 2) {
+            if let Some(seed) = arg(args, 2) {
                 s.rng = Rng::new(seed as u64);
             }
             match puzzles::random(&mut s.rng, w, h) {
-                Option::Some(p) => start(out, s, p),
-                Option::None => out.line(&"No luck finding one; try again, or another size."),
+                Some(p) => start(out, s, p),
+                None => out.line(&"No luck finding one; try again, or another size."),
             }
         },
-        Command::Load => {
+        Load => {
             let mut rows = String::new();
             let mut cols = String::new();
             out.put(&"rows> ")?;
@@ -182,13 +182,13 @@ fn run(
             }
             load(out, s, rows.as_str(), cols.as_str())
         },
-        Command::Mark(cell) => {
-            let Option::Some(game) = playing(out, s)? else { return Result::Ok(()) };
+        Mark(cell) => {
+            let Some(game) = playing(out, s)? else { return Ok(()) };
             let p = &game.puzzle;
-            let Option::Some(rows) = args.get(0).and_then(|a| parse::span(*a, p.height)) else {
+            let Some(rows) = args.get(0).and_then(|a| parse::span(*a, p.height)) else {
                 return usage(out, "f ROW COL, with each a number or range on the board");
             };
-            let Option::Some(cols) = args.get(1).and_then(|a| parse::span(*a, p.width)) else {
+            let Some(cols) = args.get(1).and_then(|a| parse::span(*a, p.width)) else {
                 return usage(out, "f ROW COL, with each a number or range on the board");
             };
             game.history.push(game.board.copy());
@@ -199,54 +199,52 @@ fn run(
             }
             moved(out, game)
         },
-        Command::Undo => {
-            let Option::Some(game) = playing(out, s)? else { return Result::Ok(()) };
+        Undo => {
+            let Some(game) = playing(out, s)? else { return Ok(()) };
             match game.history.pop() {
-                Option::Some(b) => {
+                Some(b) => {
                     game.board = b;
                     show::board(out, &game.puzzle, &game.board)
                 },
-                Option::None => out.line(&"There's nothing to undo."),
+                None => out.line(&"There's nothing to undo."),
             }
         },
-        Command::Hint => {
-            let Option::Some(game) = playing(out, s)? else { return Result::Ok(()) };
+        Hint => {
+            let Some(game) = playing(out, s)? else { return Ok(()) };
             hint(out, game)
         },
-        Command::Check => {
-            let Option::Some(game) = playing(out, s)? else { return Result::Ok(()) };
-            let Option::Some(solution) = &game.solution else {
+        Check => {
+            let Some(game) = playing(out, s)? else { return Ok(()) };
+            let Some(solution) = &game.solution else {
                 return out.line(&"This puzzle has no single solution to check against.");
             };
             match first_mistake(&game.board, solution) {
-                Option::Some(i) => {
+                Some(i) => {
                     out.line(&f"Something's wrong; look again at row {i / game.board.width + 1}.")
                 },
-                Option::None => out.line(&"Nothing's wrong so far."),
+                None => out.line(&"Nothing's wrong so far."),
             }
         },
-        Command::Solve => {
-            let Option::Some(game) = playing(out, s)? else { return Result::Ok(()) };
+        Solve => {
+            let Some(game) = playing(out, s)? else { return Ok(()) };
             game.over = true;
             match &game.solution {
-                Option::Some(solution) => {
+                Some(solution) => {
                     out.line(&"The answer:")?;
                     show::board(out, &game.puzzle, solution)
                 },
-                Option::None => match solve::solve(&game.puzzle, &game.board) {
-                    Option::Some(Answer::Unique(b)) | Option::Some(Answer::Many(b)) => {
+                None => match solve::solve(&game.puzzle, &game.board) {
+                    Some(Answer::Unique(b)) | Some(Answer::Many(b)) => {
                         out.line(&"An answer, from where you are:")?;
                         show::board(out, &game.puzzle, &b)
                     },
-                    Option::Some(Answer::None) => out.line(
-                        &"From where you are there's none; try `undo`.",
-                    ),
-                    Option::None => out.line(&"The solver gave up on it."),
+                    Some(Answer::None) => out.line(&"From where you are there's none; try `undo`."),
+                    None => out.line(&"The solver gave up on it."),
                 },
             }
         },
-        Command::Show => {
-            let Option::Some(game) = playing(out, s)? else { return Result::Ok(()) };
+        Show => {
+            let Some(game) = playing(out, s)? else { return Ok(()) };
             show::board(out, &game.puzzle, &game.board)
         },
     }
@@ -266,17 +264,17 @@ fn playing<'a>(
     s: &'a mut Session,
 ) -> Result<Option<&'a mut Game>, std::io::Error> {
     match s.game.as_mut() {
-        Option::Some(game) => {
+        Some(game) => {
             if game.over {
                 out.line(&"That puzzle is over; `play` or `new` starts another.")?;
-                Result::Ok(Option::None)
+                Ok(None)
             } else {
-                Result::Ok(Option::Some(game))
+                Ok(Some(game))
             }
         },
-        Option::None => {
+        None => {
             out.line(&"There's no puzzle yet; try `play 1`, or `list`.")?;
-            Result::Ok(Option::None)
+            Ok(None)
         },
     }
 }
@@ -285,29 +283,29 @@ fn playing<'a>(
 fn start(out: &mut Stdout, s: &mut Session, p: Puzzle) -> Result<(), std::io::Error> {
     let board = Board::new(p.width, p.height);
     let solution = match solve::solve(&p, &board) {
-        Option::Some(Answer::Unique(b)) => Option::Some(b),
-        Option::Some(Answer::Many(_)) => {
+        Some(Answer::Unique(b)) => Some(b),
+        Some(Answer::Many(_)) => {
             out.line(&"This puzzle has more than one solution; any will do.")?;
-            Option::None
+            None
         },
-        Option::Some(Answer::None) => return out.line(&"This puzzle has no solution."),
-        Option::None => {
+        Some(Answer::None) => return out.line(&"This puzzle has no solution."),
+        None => {
             out.line(&"The solver gave up on this puzzle, so there are no hints.")?;
-            Option::None
+            None
         },
     };
     out.line(&f"Puzzle: {p.name}, {p.width}x{p.height}")?;
     show::board(out, &p, &board)?;
-    s.game = Option::Some(Game { puzzle: p, board, history: List::new(), solution, over: false });
-    Result::Ok(())
+    s.game = Some(Game { puzzle: p, board, history: List::new(), solution, over: false });
+    Ok(())
 }
 
 /// Reads a puzzle from its clues and starts playing it.
 fn load(out: &mut Stdout, s: &mut Session, rows: &str, cols: &str) -> Result<(), std::io::Error> {
-    let Option::Some(rows) = parse::clues(rows) else {
+    let Some(rows) = parse::clues(rows) else {
         return out.line(&"Those row clues aren't numbers.")
     };
-    let Option::Some(cols) = parse::clues(cols) else {
+    let Some(cols) = parse::clues(cols) else {
         return out.line(&"Those column clues aren't numbers.")
     };
     let p = Puzzle {
@@ -328,7 +326,7 @@ fn moved(out: &mut Stdout, game: &mut Game) -> Result<(), std::io::Error> {
         out.line(&"Solved!")?;
         show::picture(out, &game.board)?;
     }
-    Result::Ok(())
+    Ok(())
 }
 
 /// The index of the first cell of `board` that `solution` says is wrong,
@@ -337,29 +335,29 @@ fn first_mistake(board: &Board, solution: &Board) -> Option<usize> {
     for y in 0..board.height {
         for x in 0..board.width {
             let have = board.get(x, y);
-            if have != Cell::Unknown && have != solution.get(x, y) {
-                return Option::Some(y * board.width + x);
+            if have != Unknown && have != solution.get(x, y) {
+                return Some(y * board.width + x);
             }
         }
     }
-    Option::None
+    None
 }
 
 /// Fills in a cell that a row or column makes certain, and says why, or
 /// says where a mistake is.
 fn hint(out: &mut Stdout, game: &mut Game) -> Result<(), std::io::Error> {
-    if let Option::Some(solution) = &game.solution {
-        if let Option::Some(i) = first_mistake(&game.board, solution) {
+    if let Some(solution) = &game.solution {
+        if let Some(i) = first_mistake(&game.board, solution) {
             let w = game.board.width;
             return out.line(&f"Row {i / w + 1}, column {i % w + 1} is wrong.");
         }
     }
-    let Option::Some(step) = solve::next_step(&game.puzzle, &game.board) else {
+    let Some(step) = solve::next_step(&game.puzzle, &game.board) else {
         return out.line(
             &"No row or column says anything more on its own; something must be guessed.",
         );
     };
-    let state = if step.cell == Cell::Filled { "filled" } else { "empty" };
+    let state = if step.cell == Filled { "filled" } else { "empty" };
     if step.by_row {
         out.line(&f"Row {step.y + 1} says column {step.x + 1} is {state}.")?;
     } else {

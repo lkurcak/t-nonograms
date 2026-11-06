@@ -13,6 +13,8 @@
 
 use alloc::list::List;
 use alloc::string::String;
+use Cell::{Empty, Filled, Unknown};
+use Outcome::{Changed, Contradiction};
 
 /// What's known of a cell.
 #[derive(Copy, Discard, Eq)]
@@ -43,23 +45,23 @@ impl Table {
 
     fn get(&self, r: usize, c: usize) -> bool {
         match self.bits.get(r * self.cols + c) {
-            Option::Some(b) => *b,
-            Option::None => false,
+            Some(b) => *b,
+            None => false,
         }
     }
 
     fn set(&mut self, r: usize, c: usize) {
-        if let Option::Some(b) = self.bits.get_mut(r * self.cols + c) {
+        if let Some(b) = self.bits.get_mut(r * self.cols + c) {
             *b = true;
         }
     }
 }
 
 /// What's known of cell `i` of `line`, with the cell past its end empty.
-fn at(line: &[Cell], i: usize) -> Cell { line.get(i).copied().unwrap_or(Cell::Empty) }
+fn at(line: &[Cell], i: usize) -> Cell { line.get(i).copied().unwrap_or(Empty) }
 
 /// Can cell `i` be empty, as far as is known?
-fn may_be_empty(line: &[Cell], i: usize) -> bool { at(line, i) != Cell::Filled }
+fn may_be_empty(line: &[Cell], i: usize) -> bool { at(line, i) != Filled }
 
 /// How many cells before each index are known to be empty: `empties[i]`
 /// for the cells `0..i`, so `i` from 0 to `n` (the extra cell isn't
@@ -69,7 +71,7 @@ fn count_empties(line: &[Cell]) -> List<usize> {
     let mut seen: usize = 0;
     empties.push(0);
     for c in line.iter() {
-        if *c == Cell::Empty {
+        if *c == Empty {
             seen = seen + 1;
         }
         empties.push(seen);
@@ -81,19 +83,19 @@ fn count_empties(line: &[Cell]) -> List<usize> {
 /// empty, and are they all in the line?
 fn fits(empties: &[usize], s: usize, e: usize) -> bool {
     match empties.get(s) {
-        Option::Some(a) => match empties.get(e) {
-            Option::Some(b) => *a == *b,
-            Option::None => false,
+        Some(a) => match empties.get(e) {
+            Some(b) => *a == *b,
+            None => false,
         },
-        Option::None => false,
+        None => false,
     }
 }
 
 /// The clue's `j`th block, or 0 past the end.
 fn block(clue: &[usize], j: usize) -> usize {
     match clue.get(j) {
-        Option::Some(b) => *b,
-        Option::None => 0,
+        Some(b) => *b,
+        None => 0,
     }
 }
 
@@ -126,7 +128,7 @@ pub fn solve(clue: &[usize], line: &mut [Cell]) -> Outcome {
         }
     }
     if !fwd.get(m, k) {
-        return Outcome::Contradiction;
+        return Contradiction;
     }
 
     let mut bwd = Table::new(m + 1, k + 1);
@@ -175,7 +177,7 @@ pub fn solve(clue: &[usize], line: &mut [Cell]) -> Outcome {
                 && bwd.get(e + 1, j + 1)
             {
                 set(&mut can_empty, e);
-                if let Option::Some(r) = reach.get_mut(i) {
+                if let Some(r) = reach.get_mut(i) {
                     if *r < e {
                         *r = e;
                     }
@@ -188,37 +190,37 @@ pub fn solve(clue: &[usize], line: &mut [Cell]) -> Outcome {
     let mut covered: usize = 0;
     let mut i: usize = 0;
     while i < n {
-        if let Option::Some(r) = reach.get(i) {
+        if let Some(r) = reach.get(i) {
             if *r > covered {
                 covered = *r;
             }
         }
         let can_fill = i < covered;
         let empty = match can_empty.get(i) {
-            Option::Some(b) => *b,
-            Option::None => false,
+            Some(b) => *b,
+            None => false,
         };
         let now = line[i];
         if !can_fill && !empty {
-            return Outcome::Contradiction;
+            return Contradiction;
         }
-        if now == Cell::Unknown {
+        if now == Unknown {
             if !can_fill {
-                line[i] = Cell::Empty;
+                line[i] = Empty;
                 changed = changed + 1;
             } else if !empty {
-                line[i] = Cell::Filled;
+                line[i] = Filled;
                 changed = changed + 1;
             }
         }
         i = i + 1;
     }
-    Outcome::Changed(changed)
+    Changed(changed)
 }
 
 /// Sets `l[i]`, if there's an `l[i]`.
 fn set(l: &mut List<bool>, i: usize) {
-    if let Option::Some(b) = l.get_mut(i) {
+    if let Some(b) = l.get_mut(i) {
         *b = true;
     }
 }
@@ -227,13 +229,7 @@ fn set(l: &mut List<bool>, i: usize) {
 fn cells(text: &str) -> List<Cell> {
     let mut l = List::new();
     for c in text.chars() {
-        l.push(if c == '#' {
-            Cell::Filled
-        } else if c == 'x' {
-            Cell::Empty
-        } else {
-            Cell::Unknown
-        });
+        l.push(if c == '#' { Filled } else if c == 'x' { Empty } else { Unknown });
     }
     l
 }
@@ -243,9 +239,9 @@ fn text(line: &[Cell]) -> String {
     let mut s = String::new();
     for c in line.iter() {
         s.push(match *c {
-            Cell::Unknown => '.',
-            Cell::Filled => '#',
-            Cell::Empty => 'x',
+            Unknown => '.',
+            Filled => '#',
+            Empty => 'x',
         });
     }
     s
@@ -256,8 +252,8 @@ fn text(line: &[Cell]) -> String {
 fn solved(clue: &[usize], start: &str, want: &str) {
     let mut l = cells(start);
     let got = match solve(clue, l.as_mut_slice()) {
-        Outcome::Contradiction => String::from("contradiction"),
-        Outcome::Changed(_) => text(l.as_slice()),
+        Contradiction => String::from("contradiction"),
+        Changed(_) => text(l.as_slice()),
     };
     assert_eq(&got.as_str(), &want);
 }

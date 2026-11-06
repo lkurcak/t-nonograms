@@ -5,6 +5,7 @@ use alloc::list::List;
 use alloc::string::String;
 
 use crate::line::Cell;
+use crate::line::Cell::{Empty, Filled, Unknown};
 
 /// A grid of cells, `width` by `height`, row by row.
 #[derive(Discard)]
@@ -16,7 +17,7 @@ impl Board {
         let n = width * height;
         let mut cells = List::with_capacity(n);
         for _ in 0..n {
-            cells.push(Cell::Unknown);
+            cells.push(Unknown);
         }
         Board { width, height, cells }
     }
@@ -33,9 +34,9 @@ impl Board {
     /// The cell in column `x` of row `y`; past the edge, empty.
     pub fn get(&self, x: usize, y: usize) -> Cell {
         if x >= self.width {
-            return Cell::Empty;
+            return Empty;
         }
-        self.cells.get(y * self.width + x).copied().unwrap_or(Cell::Empty)
+        self.cells.get(y * self.width + x).copied().unwrap_or(Empty)
     }
 
     /// Makes the cell in column `x` of row `y` `c`, if there's one there.
@@ -43,7 +44,7 @@ impl Board {
         if x >= self.width {
             return;
         }
-        if let Option::Some(at) = self.cells.get_mut(y * self.width + x) {
+        if let Some(at) = self.cells.get_mut(y * self.width + x) {
             *at = c;
         }
     }
@@ -86,7 +87,7 @@ impl Board {
     pub fn unknowns(&self) -> usize {
         let mut n: usize = 0;
         for c in self.cells.iter() {
-            if *c == Cell::Unknown {
+            if *c == Unknown {
                 n = n + 1;
             }
         }
@@ -97,12 +98,12 @@ impl Board {
     pub fn first_unknown(&self) -> Option<usize> {
         let mut i: usize = 0;
         for c in self.cells.iter() {
-            if *c == Cell::Unknown {
-                return Option::Some(i);
+            if *c == Unknown {
+                return Some(i);
             }
             i = i + 1;
         }
-        Option::None
+        None
     }
 }
 
@@ -120,16 +121,16 @@ impl Puzzle {
     /// The clue of row `y`, or none past the edge.
     pub fn row(&self, y: usize) -> &[usize] {
         match self.rows.get(y) {
-            Option::Some(c) => c.as_slice(),
-            Option::None => core::slice::empty(),
+            Some(c) => c.as_slice(),
+            None => core::slice::empty(),
         }
     }
 
     /// The clue of column `x`, or none past the edge.
     pub fn col(&self, x: usize) -> &[usize] {
         match self.cols.get(x) {
-            Option::Some(c) => c.as_slice(),
-            Option::None => core::slice::empty(),
+            Some(c) => c.as_slice(),
+            None => core::slice::empty(),
         }
     }
 
@@ -200,7 +201,7 @@ pub fn clue_of(line: &[Cell]) -> List<usize> {
     let mut clue = List::new();
     let mut run: usize = 0;
     for c in line.iter() {
-        if *c == Cell::Filled {
+        if *c == Filled {
             run = run + 1;
         } else if run > 0 {
             clue.push(run);
