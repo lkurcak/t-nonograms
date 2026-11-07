@@ -28,8 +28,10 @@ It reads commands, one a line, after a `> ` prompt. `help` lists them:
 
 - `list`, `play N` or `play NAME`: the puzzles drawn in `puzzles.t`;
 - `new W H [SEED]`: a random puzzle, one a person can solve a line at a time;
-- `load`: type in a puzzle's clues, and the solver says whether it has no
-  solution, one, or more than one;
+- `load` or `load FILE`: type in a puzzle's clues, or read them from a file
+  (the rows on its first line, the columns on its second, as in
+  `tests/corner.txt`), and the solver says whether it has no solution, one,
+  or more than one;
 - `f ROW COL`, `x ROW COL`, `c ROW COL`: fill, mark empty, or clear cells,
   each of `ROW` and `COL` a number or a range like `2-5`;
 - `undo`, `hint` (one cell a single row or column makes certain, or where a

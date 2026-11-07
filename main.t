@@ -2,7 +2,7 @@
 //!
 //! It reads commands, one a line, after a `> ` prompt, until its input ends
 //! or it's told to `quit`. `help` lists them. Words on its command line are
-//! a first command: `nonograms play 3`. When its input isn't typed at a
+//! a first command: `nonograms play 3`, or `nonograms load puzzle.txt`. When its input isn't typed at a
 //! terminal, it writes each line after its prompt, so what it writes reads
 //! as a session at one.
 
@@ -10,6 +10,7 @@ use alloc::list::List;
 use alloc::string::String;
 use core::fmt::Write;
 use std::io::{Stdin, Stdout};
+use std::fs::Fs;
 use std::Os;
 
 use grid::{Board, Puzzle};
@@ -26,16 +27,17 @@ mod puzzles;
 mod show;
 mod solve;
 
-const HELP: [&str; 22] = [
+const HELP: [&str; 23] = [
     "Fill in cells so that each row and column has the blocks its clue says,",
     "in order, with at least one empty cell between blocks.",
     "",
     "  list            the puzzles there are",
     "  play N | NAME   play puzzle N from the list, or the one named NAME",
     "  new W H [SEED]  play a random puzzle, W wide and H high",
-    "  load            type a puzzle's clues: the rows on one line, then the",
-    "                  columns, each like `1 2, 3, 0` (lines apart with commas);",
-    "                  the solver says how many solutions it has",
+    "  load [FILE]     type a puzzle's clues, or read them from FILE: the rows",
+    "                  on one line, then the columns, each like `1 2, 3, 0`",
+    "                  (lines apart with commas); the solver says how many",
+    "                  solutions it has",
     "  f ROW COL       fill cells; ROW and COL can be ranges, like `2-5`",
     "  x ROW COL       mark cells empty",
     "  c ROW COL       clear cells",
@@ -91,16 +93,16 @@ struct Game {
 }
 
 /// Everything commands change: the game, and where random puzzles come
-/// from.
+/// from; and the files `load` can read.
 #[derive(Discard)]
-struct Session { game: Option<Game>, rng: Rng }
+struct Session { game: Option<Game>, rng: Rng, fs: Fs }
 
 /// Does what the command line says, if anything, then reads commands
 /// until there are no more, or one says to stop.
 fn main(os: Os) -> Result<(), std::io::Error> {
     let mut input = os.stdin;
     let mut out = os.stdout;
-    let mut session = Session { game: None, rng: Rng::new(2026) };
+    let mut session = Session { game: None, rng: Rng::new(2026), fs: os.fs };
     out.line(&"Nonograms. Type `help` for the commands, or `play 1` to start.")?;
     let mut first = List::new();
     for a in os.args.iter() {
@@ -204,6 +206,9 @@ fn run(
             }
         },
         Load => {
+            if let Some(path) = args.first() {
+                return load_file(out, s, *path);
+            }
             let mut rows = String::new();
             let mut cols = String::new();
             out.put(&"rows> ")?;
@@ -332,6 +337,19 @@ fn start(out: &mut Stdout, s: &mut Session, p: Puzzle) -> Result<(), std::io::Er
     show::board(out, &p, &board)?;
     s.game = Some(Game { puzzle: p, board, history: List::new(), solution, over: false });
     Ok(())
+}
+
+/// Reads a puzzle from the file at `path`, its row clues on the first line
+/// and its column clues on the second, and starts playing it.
+fn load_file(out: &mut Stdout, s: &mut Session, path: &str) -> Result<(), std::io::Error> {
+    let text = match s.fs.read_to_string(path) {
+        Ok(text) => text,
+        Err(e) => return out.line(&f"Can't read {path}: {e}"),
+    };
+    let mut lines = text.as_str().lines();
+    let rows = lines.next().unwrap_or("");
+    let cols = lines.next().unwrap_or("");
+    load(out, s, rows, cols)
 }
 
 /// Reads a puzzle from its clues and starts playing it.

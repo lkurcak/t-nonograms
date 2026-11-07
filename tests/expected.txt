@@ -6,9 +6,10 @@ in order, with at least one empty cell between blocks.
   list            the puzzles there are
   play N | NAME   play puzzle N from the list, or the one named NAME
   new W H [SEED]  play a random puzzle, W wide and H high
-  load            type a puzzle's clues: the rows on one line, then the
-                  columns, each like `1 2, 3, 0` (lines apart with commas);
-                  the solver says how many solutions it has
+  load [FILE]     type a puzzle's clues, or read them from FILE: the rows
+                  on one line, then the columns, each like `1 2, 3, 0`
+                  (lines apart with commas); the solver says how many
+                  solutions it has
   f ROW COL       fill cells; ROW and COL can be ranges, like `2-5`
   x ROW COL       mark cells empty
   c ROW COL       clear cells
@@ -259,6 +260,32 @@ The answer:
   0 | x x x x x  5
     +----------
       1 2 3 4 5
+> load tests/corner.txt
+Puzzle: loaded, 5x5
+          1
+      2 2 1 1 1
+    +----------
+  1 | . . . . .  1
+  2 | . . . . .  2
+2 1 | . . . . .  3
+  2 | . . . . .  4
+  0 | . . . . .  5
+    +----------
+      1 2 3 4 5
+> solve
+The answer:
+          1
+      2 2 1 1 1
+    +----------
+  1 | x x # x x  1
+  2 | # # x x x  2
+2 1 | # # x x #  3
+  2 | x x # # x  4
+  0 | x x x x x  5
+    +----------
+      1 2 3 4 5
+> load tests/missing.txt
+Can't read tests/missing.txt: not found (os error 2)
 > load
 rows> 1, 1
 cols> 1, 1
