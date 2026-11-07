@@ -36,6 +36,12 @@ It reads commands, one a line, after a `> ` prompt. `help` lists them:
   each of `ROW` and `COL` a number or a range like `2-5`;
 - `undo`, `hint` (one cell a single row or column makes certain, or where a
   mistake is), `check`, `solve`, `show`, `quit`.
+- `keys`, at a terminal: play with the arrow keys (or `hjkl`/`wasd`); `f`
+  or space fills, `x` marks empty, `c` clears, `u` undoes, `q` or Escape
+  goes back to commands.
+
+Random puzzles are seeded from the operating system's entropy, so each run
+gives different ones; `new W H SEED` gives the same one again.
 
 ## How the solver works
 

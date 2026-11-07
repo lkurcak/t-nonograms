@@ -29,6 +29,16 @@ would work, but without raw input there's little point.
 echoes what it reads when no one's typing it, and `tests/run.sh` no longer
 needs `awk`. Raw keys wait for t-lang's Os-C step.
 
+**Raw keys fixed in 0.65.0** (t-lang step 49): `keys` plays with the arrow
+keys. `os.stdin.raw()` gives a `Raw`, read a byte at a time; dropping it
+puts the terminal back, and so does a panic. Telling the escape key from
+the start of an arrow's escape sequence is `raw.wait(deadline)` 30 ms on:
+no thread, no timer. Ctrl-C arrives as a key (3), which the game takes as
+"go back". The cursor is the cell drawn in reverse video (`ESC [ 7 m`), so
+`show::board` grew a `board_at` with an optional cursor. Works; what's
+missing is only a library: no escape-sequence parser or screen API, so the
+game writes `ESC [ H ESC [ 2 J` and redraws everything after each key.
+
 ## No randomness, and no clock to seed it — gap
 
 `new 10 10` makes a random puzzle. The generator was easy (below), but
@@ -42,6 +52,11 @@ let mut session = Session { game: Option::None, rng: Rng::new(2026) };
 
 A seed would be something the `Os` hands out, like the streams, so a
 function given none can't be nondeterministic. That would fit T well.
+
+**Fixed in 0.65.0** (t-lang step 49): `os.entropy.u64()?` seeds the
+session, so each run's random puzzles differ; `new W H SEED` still repeats
+one, which is what the transcript test uses. The generator stays a pure
+function of its seed, as hoped.
 
 ## Writing SplitMix64 — works
 

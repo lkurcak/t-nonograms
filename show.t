@@ -83,6 +83,18 @@ fn clue<W: Write>(w: &mut W, clue: &[usize]) -> Result<(), W::Error> {
 
 /// Writes `board`, with `p`'s clues around it.
 pub fn board<W: Write>(w: &mut W, p: &Puzzle, board: &Board) -> Result<(), W::Error> {
+    board_at(w, p, board, None)
+}
+
+/// Writes `board`, with `p`'s clues around it, and the cell at index
+/// `cursor`, row by row, if there's one, shown in reverse, as a terminal
+/// does after the escape sequence `ESC [ 7 m`.
+pub fn board_at<W: Write>(
+    w: &mut W,
+    p: &Puzzle,
+    board: &Board,
+    cursor: Option<usize>,
+) -> Result<(), W::Error> {
     // Each cell takes `cw` columns, enough for any number above or below.
     let mut most = p.largest_clue();
     if p.width > most {
@@ -135,11 +147,18 @@ pub fn board<W: Write>(w: &mut W, p: &Puzzle, board: &Board) -> Result<(), W::Er
         w.write_str(" |")?;
         for x in 0..p.width {
             spaces(w, cw - 1)?;
+            let here = cursor == Some(y * p.width + x);
+            if here {
+                w.write_str("\u{1b}[7m")?;
+            }
             w.write_char(match board.get(x, y) {
                 Unknown => '.',
                 Filled => '#',
                 Empty => 'x',
             })?;
+            if here {
+                w.write_str("\u{1b}[0m")?;
+            }
         }
         number(w, y + 1, digits(p.height) + 2)?;
         w.write_char('\n')?;

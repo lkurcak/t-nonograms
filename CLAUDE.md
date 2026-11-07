@@ -1,7 +1,7 @@
 # t-nonograms
 
 Nonograms, a game and a solver, written in T, the language at
-`~/repos/tooling/t-lang` (GitHub: lkurcak/t-lang). Like tcalc and t-hashmap
+`~/repos/tooling/t-lang` (GitHub: lkurcak/t-lang). Like tcalc and t-libs
 (`~/repos/tooling/`), part of its purpose is to find out what using T is
 like, here for a game.
 
