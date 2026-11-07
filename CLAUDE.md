@@ -14,7 +14,7 @@ like, here for a game.
   --check`, `t test`, and the transcript of `tests/input.txt` against
   `tests/expected.txt`, both interpreted and compiled with `t build`.
   `BLESS=1` rewrites the expected transcript.
-- CI pins a `t` release (`T_VERSION` + `T_SHA256` in ci.yml); bump both after
+- CI pins a `t` release (`t-version` + `t-sha256` in .github/workflows/t.yml, which calls forge's shared t-ci.yml); bump both after
   a t-lang release, from `gh release view vX.Y.Z -R lkurcak/t-lang --json
   assets`.
 - `FRICTION.md` is the friction log: label entries gap / by design / unsure

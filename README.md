@@ -71,5 +71,5 @@ BLESS=1 tests/run.sh     # rewrite tests/expected.txt
 Big random puzzles (`new 20 20`) take seconds interpreted and milliseconds
 compiled.
 
-It needs `t` 0.55.0, the version CI pins (in `.github/workflows/ci.yml`),
+It needs `t` 0.65.0, the version CI pins (in `.github/workflows/t.yml`),
 and a C compiler for `t build`.
