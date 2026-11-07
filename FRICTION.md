@@ -265,6 +265,11 @@ didn't block anything.
 line are a first command, as `nonograms play 3`. Reading a puzzle from a
 file waits for files (t-lang's Os-B step).
 
+**Fixed in 0.64.0** (t-lang step 48, files): `load FILE` reads a puzzle's
+clues with `os.fs.read_to_string`, so `nonograms load puzzle.txt` works.
+The `Fs` lives in the `Session`, beside the random numbers. (No match
+guards in T, so `Load` checks `args.first()` inside its arm: fine.)
+
 ## Small ones
 
 - `for _ in 0..10` is an error, "cannot infer `T` for this use of
