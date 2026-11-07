@@ -12,8 +12,8 @@ permissions:
 env:
   # The `t` t-nonograms is checked with. Bump both together, from the release's
   # asset digest: `gh release view vX.Y.Z -R lkurcak/t-lang --json assets`.
-  T_VERSION: v0.63.0
-  T_SHA256: fc3197b6bd8baafd5c91b33033979c4647ea7ad33c174d748956a31db0fc625d
+  T_VERSION: v0.64.0
+  T_SHA256: 49a5f52684d6ed75120c79b2bd711ce7344a93d34235bb37cb4b4062f3d744c3
 
 jobs:
   test:
