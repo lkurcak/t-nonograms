@@ -3,7 +3,7 @@
 
 use alloc::list::List;
 
-use crate::grid::{Board, Puzzle};
+use crate::board::{Board, Puzzle};
 use crate::line::{self, Cell, Outcome};
 
 /// What solving a puzzle found.
@@ -160,8 +160,8 @@ fn explore(p: &Puzzle, mut board: Board, search: &mut Search) -> bool {
         return false;
     }
     search.budget = search.budget - 1;
-    let x = i % board.width;
-    let y = i / board.width;
+    let x = i % board.width();
+    let y = i / board.width();
     let mut guess = board.copy();
     guess.set(x, y, Cell::Filled);
     if !explore(p, guess, search) {

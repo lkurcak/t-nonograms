@@ -13,6 +13,7 @@
 
 use alloc::list::List;
 use alloc::string::String;
+use grid::Grid;
 use Cell::{Empty, Filled, Unknown};
 use Outcome::{Changed, Contradiction};
 
@@ -29,30 +30,24 @@ pub enum Outcome {
     Changed(usize),
 }
 
-/// A table of `bool`s, `rows` by `cols`, all false at first.
+/// A table of `bool`s, `rows` by `cols`, all false at first: a grid, with
+/// a row `r` and column `c` the other way round from a grid's `x` and `y`.
 #[derive(Discard)]
-struct Table { cols: usize, bits: List<bool> }
+struct Table { bits: Grid<bool> }
 
 impl Table {
     fn new(rows: usize, cols: usize) -> Table {
-        let n = rows * cols;
-        let mut bits = List::with_capacity(n);
-        for _ in 0..n {
-            bits.push(false);
-        }
-        Table { cols, bits }
+        let Some(bits) = Grid::new(cols, rows, false) else {
+            panic("a table that big doesn't fit in memory")
+        };
+        Table { bits }
     }
 
-    fn get(&self, r: usize, c: usize) -> bool {
-        match self.bits.get(r * self.cols + c) {
-            Some(b) => *b,
-            None => false,
-        }
-    }
+    fn get(&self, r: usize, c: usize) -> bool { self.bits.at(c, r).copied().unwrap_or(false) }
 
     fn set(&mut self, r: usize, c: usize) {
-        if let Some(b) = self.bits.get_mut(r * self.cols + c) {
-            *b = true;
+        if c < self.bits.width() && r < self.bits.height() {
+            self.bits.set(c, r, true);
         }
     }
 }

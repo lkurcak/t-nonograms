@@ -16,7 +16,7 @@
 
 use core::fmt::Write;
 
-use crate::grid::{Board, Puzzle};
+use crate::board::{Board, Puzzle};
 use crate::line::Cell::{Empty, Filled, Unknown};
 
 /// How many digits `n` has in decimal.
@@ -184,10 +184,10 @@ fn rule<W: Write>(w: &mut W, rw: usize, n: usize) -> Result<(), W::Error> {
 /// Writes the picture `board` makes, `##` for each filled cell and spaces
 /// for the rest, with nothing around it.
 pub fn picture<W: Write>(w: &mut W, board: &Board) -> Result<(), W::Error> {
-    for y in 0..board.height {
+    for y in 0..board.height() {
         // Up to the last filled cell, so no line ends in spaces.
         let mut end: usize = 0;
-        for x in 0..board.width {
+        for x in 0..board.width() {
             if board.get(x, y) == Filled {
                 end = x + 1;
             }

@@ -6,53 +6,44 @@ use alloc::string::String;
 
 use crate::line::Cell;
 use crate::line::Cell::{Empty, Filled, Unknown};
+use grid::Grid;
 
-/// A grid of cells, `width` by `height`, row by row.
+/// A grid of cells, `width()` by `height()`.
 #[derive(Discard)]
-pub struct Board { pub width: usize, pub height: usize, cells: List<Cell> }
+pub struct Board { cells: Grid<Cell> }
 
 impl Board {
     /// A board of unknown cells.
     pub fn new(width: usize, height: usize) -> Board {
-        let n = width * height;
-        let mut cells = List::with_capacity(n);
-        for _ in 0..n {
-            cells.push(Unknown);
-        }
-        Board { width, height, cells }
+        let Some(cells) = Grid::new(width, height, Unknown) else {
+            panic("a board that big doesn't fit in memory")
+        };
+        Board { cells }
     }
+
+    /// How many cells wide it is.
+    pub fn width(&self) -> usize { self.cells.width() }
+
+    /// How many cells high it is.
+    pub fn height(&self) -> usize { self.cells.height() }
 
     /// The same board, again.
-    pub fn copy(&self) -> Board {
-        let mut cells = List::with_capacity(self.cells.len());
-        for c in self.cells.iter() {
-            cells.push(*c);
-        }
-        Board { width: self.width, height: self.height, cells }
-    }
+    pub fn copy(&self) -> Board { Board { cells: self.cells.copy() } }
 
     /// The cell in column `x` of row `y`; past the edge, empty.
-    pub fn get(&self, x: usize, y: usize) -> Cell {
-        if x >= self.width {
-            return Empty;
-        }
-        self.cells.get(y * self.width + x).copied().unwrap_or(Empty)
-    }
+    pub fn get(&self, x: usize, y: usize) -> Cell { self.cells.at(x, y).copied().unwrap_or(Empty) }
 
     /// Makes the cell in column `x` of row `y` `c`, if there's one there.
     pub fn set(&mut self, x: usize, y: usize, c: Cell) {
-        if x >= self.width {
-            return;
-        }
-        if let Some(at) = self.cells.get_mut(y * self.width + x) {
-            *at = c;
+        if x < self.cells.width() && y < self.cells.height() {
+            self.cells.set(x, y, c);
         }
     }
 
     /// Row `y`, into `line`, instead of what it held.
     pub fn row(&self, y: usize, line: &mut List<Cell>) {
         line.clear();
-        for x in 0..self.width {
+        for x in 0..self.width() {
             line.push(self.get(x, y));
         }
     }
@@ -60,7 +51,7 @@ impl Board {
     /// Column `x`, into `line`, instead of what it held.
     pub fn col(&self, x: usize, line: &mut List<Cell>) {
         line.clear();
-        for y in 0..self.height {
+        for y in 0..self.height() {
             line.push(self.get(x, y));
         }
     }
@@ -84,15 +75,7 @@ impl Board {
     }
 
     /// How many cells aren't known.
-    pub fn unknowns(&self) -> usize {
-        let mut n: usize = 0;
-        for c in self.cells.iter() {
-            if *c == Unknown {
-                n = n + 1;
-            }
-        }
-        n
-    }
+    pub fn unknowns(&self) -> usize { self.cells.iter().filter(|c| **c == Unknown).count() }
 
     /// The first cell that isn't known, row by row, as its index.
     pub fn first_unknown(&self) -> Option<usize> {
@@ -137,20 +120,20 @@ impl Puzzle {
     /// The puzzle whose answer is `picture`, named `name`.
     pub fn of(name: &str, picture: &Board) -> Puzzle {
         let mut line = List::new();
-        let mut rows = List::with_capacity(picture.height);
-        for y in 0..picture.height {
+        let mut rows = List::with_capacity(picture.height());
+        for y in 0..picture.height() {
             picture.row(y, &mut line);
             rows.push(clue_of(line.as_slice()));
         }
-        let mut cols = List::with_capacity(picture.width);
-        for x in 0..picture.width {
+        let mut cols = List::with_capacity(picture.width());
+        for x in 0..picture.width() {
             picture.col(x, &mut line);
             cols.push(clue_of(line.as_slice()));
         }
         Puzzle {
             name: String::from(name),
-            width: picture.width,
-            height: picture.height,
+            width: picture.width(),
+            height: picture.height(),
             rows,
             cols,
         }

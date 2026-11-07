@@ -6,7 +6,7 @@ Nonograms, a game and a solver, written in T, the language at
 like, here for a game.
 
 - `main.t` is the program's root: the command loop. Modules: `line` (one
-  line's solver, and `Cell`), `grid` (`Board`, `Puzzle`), `solve` (the whole
+  line's solver, and `Cell`), `board` (`Board`, over t-libs' `Grid`, and `Puzzle`), `solve` (the whole
   puzzle: line propagation, then guessing), `puzzles` (drawn pictures, and
   random ones), `show` (drawing a board), `parse` (reading commands and
   clues).

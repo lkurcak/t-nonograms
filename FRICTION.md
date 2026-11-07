@@ -200,6 +200,23 @@ Arrays sized by const generics (`[[Cell; W]; H]`) would prove it, but a
 board's size is only known at run time. This is the cost of linear-only
 refinements; I'd guess most grid programs pay it.
 
+**Partly fixed** in 0.67.0: products of two unknowns are in the logic
+(t-lang step 51), and the board is now t-libs' `Grid<Cell>`, whose
+invariant is `cells.len() == width * height` and whose `get`/`set` are
+proved for `x < width()` and `y < height()`. The line solver's `Table` is
+a `Grid<bool>`. But `Board::get` still reads past the edge as empty: its
+callers loop with `for x in 0..board.width()`, and a `for` over a range
+tells the checker nothing of `x` (t-libs FRICTION.md), so they can't
+prove the coordinates; `Grid::at` is the checked read they use.
+
+## A module can't share a dependency's name — unsure
+
+The board's module was `grid`, and the package it now uses is `grid`
+too: "a module can't be called `grid`: that's the name of a package this
+one depends on". The module is `board` now, which is a better name
+anyway. A dependency can't be renamed in `t.toml`, so a clash with a
+package's name has one way out.
+
 ## `assert` tells the checker nothing — gap
 
 ```rust,ignore
