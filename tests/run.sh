@@ -10,21 +10,11 @@ t check --deny-warnings main.t
 t fmt --check ./*.t
 t test --deny-warnings main.t
 
-# The game's output, with each line of tests/input.txt after the prompt
-# that asked for it (`> `, `rows> ` or `cols> `), as at a terminal, where
-# what's typed is echoed.
+# The game's output: its input isn't a terminal, so it echoes each line of
+# tests/input.txt after the prompt that asked for it (`> `, `rows> ` or
+# `cols> `), as a terminal would.
 transcript() {
-    "$@" < tests/input.txt |
-        awk 'NR == FNR { input[FNR] = $0; next }
-             {
-                 line = $0
-                 while (match(line, /^(> |rows> |cols> )/)) {
-                     n++
-                     print substr(line, 1, RLENGTH) input[n]
-                     line = substr(line, RLENGTH + 1)
-                 }
-                 if (line != "" || $0 == "") print line
-             }' tests/input.txt -
+    "$@" < tests/input.txt
 }
 
 # `t main.t` compiles the game; `--interp` runs it in the interpreter,

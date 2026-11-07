@@ -1,7 +1,10 @@
 //! Nonograms: a game, and a solver.
 //!
 //! It reads commands, one a line, after a `> ` prompt, until its input ends
-//! or it's told to `quit`. `help` lists them.
+//! or it's told to `quit`. `help` lists them. Words on its command line are
+//! a first command: `nonograms play 3`. When its input isn't typed at a
+//! terminal, it writes each line after its prompt, so what it writes reads
+//! as a session at one.
 
 use alloc::list::List;
 use alloc::string::String;
@@ -92,30 +95,61 @@ struct Game {
 #[derive(Discard)]
 struct Session { game: Option<Game>, rng: Rng }
 
-/// Reads commands until there are no more, or one says to stop.
+/// Does what the command line says, if anything, then reads commands
+/// until there are no more, or one says to stop.
 fn main(os: Os) -> Result<(), std::io::Error> {
     let mut input = os.stdin;
     let mut out = os.stdout;
     let mut session = Session { game: None, rng: Rng::new(2026) };
-    let mut line = String::new();
     out.line(&"Nonograms. Type `help` for the commands, or `play 1` to start.")?;
+    let mut first = List::new();
+    for a in os.args.iter() {
+        first.push(a);
+    }
+    if !first.is_empty() && !obey(&mut out, &mut input, &mut session, first.as_slice())? {
+        return Ok(());
+    }
+    let mut line = String::new();
     out.put(&"> ")?;
-    while input.read_line(&mut line)? {
+    while read(&mut input, &mut out, &mut line)? {
         let words = parse::words(line.as_str());
-        if let Some(first) = words.first() {
-            let args = match words.as_slice().split_at(1) {
-                Some(parts) => parts.tail,
-                None => core::slice::empty(),
-            };
-            match command(*first) {
-                Some(Quit) => return Ok(()),
-                Some(c) => run(&mut out, &mut input, &mut session, c, args)?,
-                None => out.line(&"There's no such command; `help` lists them.")?,
-            }
+        if !obey(&mut out, &mut input, &mut session, words.as_slice())? {
+            return Ok(());
         }
         out.put(&"> ")?;
     }
     out.line(&"")
+}
+
+/// Does what command `words` says, if it's one: `false` if it says to stop.
+fn obey(
+    out: &mut Stdout,
+    input: &mut Stdin,
+    s: &mut Session,
+    words: &[&str],
+) -> Result<bool, std::io::Error> {
+    let Some(first) = words.first() else { return Ok(true) };
+    let args = match words.split_at(1) {
+        Some(parts) => parts.tail,
+        None => core::slice::empty(),
+    };
+    match command(*first) {
+        Some(Quit) => return Ok(false),
+        Some(c) => run(out, input, s, c, args)?,
+        None => out.line(&"There's no such command; `help` lists them.")?,
+    }
+    Ok(true)
+}
+
+/// Reads the next line of `input` into `line`, as `read_line` does, and if
+/// no one's typing it, writes it to `out`, after the prompt there, as a
+/// terminal would.
+fn read(input: &mut Stdin, out: &mut Stdout, line: &mut String) -> Result<bool, std::io::Error> {
+    let more = input.read_line(line)?;
+    if more && !input.is_terminal() {
+        out.line(&line.as_str())?;
+    }
+    Ok(more)
 }
 
 /// Does what `c` says, with `args`, the words after it.
@@ -173,11 +207,11 @@ fn run(
             let mut rows = String::new();
             let mut cols = String::new();
             out.put(&"rows> ")?;
-            if !input.read_line(&mut rows)? {
+            if !read(input, out, &mut rows)? {
                 return out.line(&"");
             }
             out.put(&"cols> ")?;
-            if !input.read_line(&mut cols)? {
+            if !read(input, out, &mut cols)? {
                 return out.line(&"");
             }
             load(out, s, rows.as_str(), cols.as_str())
