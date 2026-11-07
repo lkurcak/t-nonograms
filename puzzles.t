@@ -4,7 +4,7 @@ use alloc::string::String;
 use core::fmt::Write;
 use core::num::{wrapping_add, wrapping_mul};
 
-use crate::grid::{Board, Puzzle};
+use crate::board::{Board, Puzzle};
 use crate::parse;
 use crate::solve::{self, Answer, Spread};
 use crate::line::Cell::{Empty, Filled};
@@ -103,9 +103,9 @@ pub fn describe(i: usize, out: &mut String) {
     out.push_str(pic.name);
     out.push_str(" (");
     let board = draw(pic.rows);
-    out.put(&board.width).into_ok();
+    out.put(&board.width()).into_ok();
     out.push('x');
-    out.put(&board.height).into_ok();
+    out.put(&board.height()).into_ok();
     out.push(')');
 }
 

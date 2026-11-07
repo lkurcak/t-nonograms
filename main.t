@@ -15,7 +15,7 @@ use std::fs::Fs;
 use std::time::Clock;
 use std::Os;
 
-use grid::{Board, Puzzle};
+use board::{Board, Puzzle};
 use keys::Key;
 use line::Cell;
 use puzzles::Rng;
@@ -23,7 +23,7 @@ use solve::Answer;
 use Command::{Check, Help, Hint, Keys, List, Load, Mark, New, Play, Quit, Show, Solve, Undo};
 use line::Cell::{Empty, Filled, Unknown};
 
-mod grid;
+mod board;
 mod keys;
 mod line;
 mod parse;
@@ -269,7 +269,7 @@ fn run(
             };
             match first_mistake(&game.board, solution) {
                 Some(i) => {
-                    out.line(&f"Something's wrong; look again at row {i / game.board.width + 1}.")
+                    out.line(&f"Something's wrong; look again at row {i / game.board.width() + 1}.")
                 },
                 None => out.line(&"Nothing's wrong so far."),
             }
@@ -435,11 +435,11 @@ fn moved(out: &mut Stdout, game: &mut Game) -> Result<(), std::io::Error> {
 /// The index of the first cell of `board` that `solution` says is wrong,
 /// row by row: filled where it's empty, or marked empty where it's filled.
 fn first_mistake(board: &Board, solution: &Board) -> Option<usize> {
-    for y in 0..board.height {
-        for x in 0..board.width {
+    for y in 0..board.height() {
+        for x in 0..board.width() {
             let have = board.get(x, y);
             if have != Unknown && have != solution.get(x, y) {
-                return Some(y * board.width + x);
+                return Some(y * board.width() + x);
             }
         }
     }
@@ -451,7 +451,7 @@ fn first_mistake(board: &Board, solution: &Board) -> Option<usize> {
 fn hint(out: &mut Stdout, game: &mut Game) -> Result<(), std::io::Error> {
     if let Some(solution) = &game.solution {
         if let Some(i) = first_mistake(&game.board, solution) {
-            let w = game.board.width;
+            let w = game.board.width();
             return out.line(&f"Row {i / w + 1}, column {i % w + 1} is wrong.");
         }
     }
