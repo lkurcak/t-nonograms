@@ -2,32 +2,36 @@
 //!
 //! It reads commands, one a line, after a `> ` prompt, until its input ends
 //! or it's told to `quit`. `help` lists them. Words on its command line are
-//! a first command: `nonograms play 3`, or `nonograms load puzzle.txt`. When its input isn't typed at a
-//! terminal, it writes each line after its prompt, so what it writes reads
-//! as a session at one.
+//! a first command: `nonograms play 3`, or `nonograms load puzzle.txt`.
+//! When its input isn't typed at a terminal, it writes each line after its
+//! prompt, so what it writes reads as a session at one. When it is, `keys`
+//! plays with the arrow keys instead.
 
 use alloc::list::List;
 use alloc::string::String;
 use core::fmt::Write;
 use std::io::{Stdin, Stdout};
 use std::fs::Fs;
+use std::time::Clock;
 use std::Os;
 
 use grid::{Board, Puzzle};
+use keys::Key;
 use line::Cell;
 use puzzles::Rng;
 use solve::Answer;
-use Command::{Check, Help, Hint, List, Load, Mark, New, Play, Quit, Show, Solve, Undo};
+use Command::{Check, Help, Hint, Keys, List, Load, Mark, New, Play, Quit, Show, Solve, Undo};
 use line::Cell::{Empty, Filled, Unknown};
 
 mod grid;
+mod keys;
 mod line;
 mod parse;
 mod puzzles;
 mod show;
 mod solve;
 
-const HELP: [&str; 23] = [
+const HELP: [&str; 25] = [
     "Fill in cells so that each row and column has the blocks its clue says,",
     "in order, with at least one empty cell between blocks.",
     "",
@@ -46,6 +50,8 @@ const HELP: [&str; 23] = [
     "  check           say whether any cell is wrong",
     "  solve           give up, and see the answer",
     "  show            show the board again",
+    "  keys            play with the arrow keys: f or space fills, x crosses,",
+    "                  c clears, u undoes, q or escape goes back to commands",
     "  help            this",
     "  quit            stop",
     "",
@@ -55,7 +61,7 @@ const HELP: [&str; 23] = [
 
 /// What a command can say to do.
 #[derive(Copy, Discard, Eq)]
-enum Command { Help, Quit, List, Play, New, Load, Mark(Cell), Undo, Hint, Check, Solve, Show }
+enum Command { Help, Quit, List, Play, New, Load, Mark(Cell), Undo, Hint, Check, Solve, Show, Keys }
 
 /// The command `word` names.
 fn command(word: &str) -> Option<Command> {
@@ -74,6 +80,7 @@ fn command(word: &str) -> Option<Command> {
         "check" => Check,
         "solve" => Solve,
         "show" => Show,
+        "keys" | "k" => Keys,
         _ => return None,
     })
 }
@@ -93,16 +100,19 @@ struct Game {
 }
 
 /// Everything commands change: the game, and where random puzzles come
-/// from; and the files `load` can read.
+/// from; and the files `load` can read, and the clock `keys` tells escape
+/// from an arrow by.
 #[derive(Discard)]
-struct Session { game: Option<Game>, rng: Rng, fs: Fs }
+struct Session { game: Option<Game>, rng: Rng, fs: Fs, clock: Clock }
 
 /// Does what the command line says, if anything, then reads commands
 /// until there are no more, or one says to stop.
 fn main(os: Os) -> Result<(), std::io::Error> {
     let mut input = os.stdin;
     let mut out = os.stdout;
-    let mut session = Session { game: None, rng: Rng::new(2026), fs: os.fs };
+    // Random puzzles differ each run; `new W H SEED` gives the same again.
+    let seed = os.entropy.u64()?;
+    let mut session = Session { game: None, rng: Rng::new(seed), fs: os.fs, clock: os.clock };
     out.line(&"Nonograms. Type `help` for the commands, or `play 1` to start.")?;
     let mut first = List::new();
     for a in os.args.iter() {
@@ -286,7 +296,48 @@ fn run(
             let Some(game) = playing(out, s)? else { return Ok(()) };
             show::board(out, &game.puzzle, &game.board)
         },
+        Keys => {
+            let clock = s.clock;
+            let Some(game) = playing(out, s)? else { return Ok(()) };
+            let Ok(mut raw) = input.raw() else {
+                return out.line(&"`keys` needs a terminal to type at; use `f`, `x` and `c`.");
+            };
+            let mut x: usize = 0;
+            let mut y: usize = 0;
+            while !game.puzzle.solved_by(&game.board) {
+                // Clear the screen, and draw the board, with the cursor.
+                out.put(&"\u{1b}[H\u{1b}[2J")?;
+                show::board_at(out, &game.puzzle, &game.board, Some(y * game.puzzle.width + x))?;
+                out.line(&"arrows move; f fills, x crosses, c clears, u undoes, q goes back")?;
+                match keys::read(&mut raw, clock)? {
+                    Key::Up => y = if y > 0 { y - 1 } else { y },
+                    Key::Down => y = if y + 1 < game.puzzle.height { y + 1 } else { y },
+                    Key::Left => x = if x > 0 { x - 1 } else { x },
+                    Key::Right => x = if x + 1 < game.puzzle.width { x + 1 } else { x },
+                    Key::Fill => toggle(game, x, y, Filled),
+                    Key::Cross => toggle(game, x, y, Empty),
+                    Key::Clear => toggle(game, x, y, Unknown),
+                    Key::Undo => {
+                        if let Some(b) = game.history.pop() {
+                            game.board = b;
+                        }
+                    },
+                    Key::Leave => break,
+                    Key::Other => {},
+                }
+            }
+            raw.discard();
+            moved(out, game)
+        },
     }
+}
+
+/// Makes the cell at `x`, `y` `cell`, or unknown if it's that already, as a
+/// move that can be undone.
+fn toggle(game: &mut Game, x: usize, y: usize, cell: Cell) {
+    game.history.push(game.board.copy());
+    let now = if game.board.get(x, y) == cell { Unknown } else { cell };
+    game.board.set(x, y, now);
 }
 
 /// The number that's argument `i`, if there's one.

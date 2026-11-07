@@ -18,6 +18,8 @@ in order, with at least one empty cell between blocks.
   check           say whether any cell is wrong
   solve           give up, and see the answer
   show            show the board again
+  keys            play with the arrow keys: f or space fills, x crosses,
+                  c clears, u undoes, q or escape goes back to commands
   help            this
   quit            stop
 
@@ -53,6 +55,8 @@ Row 2 says column 3 is filled.
 1 | . . . . .  5
   +----------
     1 2 3 4 5
+> keys
+`keys` needs a terminal to type at; use `f`, `x` and `c`.
 > f 3 1-5
     1 3 5 3 1
   +----------
