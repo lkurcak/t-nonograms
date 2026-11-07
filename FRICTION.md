@@ -25,6 +25,10 @@ Nothing in `std` does either, and there's no `isatty` to tell a terminal
 from a pipe (tcalc's log has that too). Writing ANSI escapes (`\u{1b}[2J`)
 would work, but without raw input there's little point.
 
+**`isatty` fixed in 0.63.0** (t-lang step 47): `is_terminal()`, so the game
+echoes what it reads when no one's typing it, and `tests/run.sh` no longer
+needs `awk`. Raw keys wait for t-lang's Os-C step.
+
 ## No randomness, and no clock to seed it — gap
 
 `new 10 10` makes a random puzzle. The generator was easy (below), but
@@ -256,6 +260,10 @@ The solver would naturally be `nonograms solve puzzle.txt`. With no
 arguments and no file reading, it's the `load` command, which reads two
 lines of clues from stdin. Piping a file of commands in works, so this
 didn't block anything.
+
+**Half fixed in 0.63.0** (t-lang step 47): `os.args`. Words on the command
+line are a first command, as `nonograms play 3`. Reading a puzzle from a
+file waits for files (t-lang's Os-B step).
 
 ## Small ones
 
