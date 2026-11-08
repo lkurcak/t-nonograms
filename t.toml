@@ -1,4 +1,4 @@
 libraries = ["alloc", "std"]
 
 [dependencies]
-grid = { git = "https://github.com/lkurcak/t-libs", rev = "c624b9b2ed0f1185279436570e6708fbcc64c4d5", subdirectory = "grid" }
+grid = { git = "https://github.com/lkurcak/t-libs", rev = "2052132b6ba2666ba6a697b5f1d53d8875caac23", subdirectory = "grid" }
