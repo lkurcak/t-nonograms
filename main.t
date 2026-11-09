@@ -142,7 +142,7 @@ fn obey(
 ) -> Result<bool, std::io::Error> {
     let Some(first) = words.first() else { return Ok(true) };
     let args = match words.split_at(1) {
-        Some(parts) => parts.tail,
+        Some((_, rest)) => rest,
         None => core::slice::empty(),
     };
     match command(*first) {

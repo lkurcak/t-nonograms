@@ -30,9 +30,9 @@ pub fn span(s: &str, most: usize) -> Option<Span> {
             Span { lo: n, hi: n }
         },
         Some(d) => {
-            let parts = s.split_at(d)?;
-            let a = number(parts.head)?;
-            let b = number(parts.tail.strip_prefix('-')?)?;
+            let (head, tail) = s.split_at(d)?;
+            let a = number(head)?;
+            let b = number(tail.strip_prefix('-')?)?;
             if a <= b { Span { lo: a, hi: b } } else { Span { lo: b, hi: a } }
         },
     };

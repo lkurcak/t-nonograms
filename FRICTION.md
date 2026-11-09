@@ -95,7 +95,7 @@ expected.
 `&str`. `command` in `main.t` is now the `match` above, 18 lines, and the
 `Word` table is gone; a `_` arm is still needed, which is right.
 
-## No tuples — gap (known)
+## No tuples — gap (known; fixed in t 0.74.0)
 
 Twice I wrote a tuple without thinking, both times for a pair of numbers:
 
@@ -109,6 +109,9 @@ and `let (Option::Some(w), Option::Some(h)) = (w, h) else { .. }` for two
 arguments that must both parse. The first became the `Span` struct, which
 already existed for the result (fine), and the second two `let .. else`s
 (fine too). Cheap here, but each was a compile, an error, and a rewrite.
+
+T has tuples since 0.74.0 (step 58): both would compile as first written.
+The code keeps `Span` and the two `let .. else`s, which read fine.
 
 ## A `const` can't hold a slice of strings — unsure
 
