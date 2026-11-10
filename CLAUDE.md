@@ -9,10 +9,13 @@ like, here for a game.
   line's solver, and `Cell`), `board` (`Board`, over t-libs' `Grid`, and `Puzzle`), `solve` (the whole
   puzzle: line propagation, then guessing), `puzzles` (drawn pictures, and
   random ones), `show` (drawing a board), `parse` (reading commands and
-  clues).
+  clues). Keys, the terminal's other screen and random numbers are
+  t-libs' `term` and `rand`.
 - `tests/run.sh` runs what CI runs: `t check --deny-warnings`, `t fmt
   --check`, `t test`, and the transcript of `tests/input.txt` against
-  `tests/expected.txt`, both interpreted and compiled with `t build`.
+  `tests/expected.txt`, both interpreted and compiled with `t build`, and
+  `tests/terminal.py` (needs python3), which plays `keys` on a
+  pseudo-terminal.
   `BLESS=1` rewrites the expected transcript.
 - CI pins a `t` release (`t-version` + `t-sha256` in .github/workflows/t.yml, which calls forge's shared t-ci.yml); bump both after
   a t-lang release, from `gh release view vX.Y.Z -R lkurcak/t-lang --json
