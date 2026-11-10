@@ -1,7 +1,8 @@
 #!/bin/sh
 # Checks t-nonograms: it type-checks with no warnings, it's formatted, its
-# tests pass, and its output for tests/input.txt is tests/expected.txt. Run
-# from anywhere; `t` must be on PATH.
+# tests pass, its output for tests/input.txt is tests/expected.txt, and
+# `keys` plays on a terminal (tests/terminal.py). Run from anywhere; `t`
+# must be on PATH, and python3, for the terminal.
 # BLESS=1 rewrites tests/expected.txt with what it prints now.
 set -eu
 cd "$(dirname "$0")/.."
@@ -32,12 +33,13 @@ if ! diff -u tests/expected.txt tests/actual.txt; then
 fi
 
 # Compiled through C, as `t main.t` runs it, it must do just what the
-# interpreter does.
+# interpreter does; and play with the keys on a terminal.
 t build -o tests/nonograms main.t
 transcript tests/nonograms > tests/actual.txt
 if ! diff -u tests/expected.txt tests/actual.txt; then
     echo "FAIL: the compiled game's output differs from tests/expected.txt"
     exit 1
 fi
+python3 -I tests/terminal.py tests/nonograms
 rm tests/actual.txt tests/nonograms
 echo "ok"

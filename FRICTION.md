@@ -74,6 +74,9 @@ z ^ (z >> 31)
 That the wrapping is spelled out is right for this code: it's the one place
 in the program where wrapping is wanted.
 
+Since t-maze needed it too, it's t-libs' `rand` now, and the key reader
+t-libs' `term`, with `keys` on the terminal's other screen.
+
 ## No string patterns — gap
 
 Commands are words, and the natural dispatch is a `match` on them:

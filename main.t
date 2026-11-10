@@ -14,11 +14,12 @@ use std::io::{Stdin, Stdout};
 use std::fs::Fs;
 use std::time::Clock;
 use std::Os;
+use rand::Rng;
+use term::Screen;
 
 use board::{Board, Puzzle};
 use keys::Key;
 use line::Cell;
-use puzzles::Rng;
 use solve::Answer;
 use Command::{Check, Help, Hint, Keys, List, Load, Mark, New, Play, Quit, Show, Solve, Undo};
 use line::Cell::{Empty, Filled, Unknown};
@@ -302,13 +303,19 @@ fn run(
             let Ok(mut raw) = input.raw() else {
                 return out.line("`keys` needs a terminal to type at; use `f`, `x` and `c`.");
             };
+            // On the other screen, so what was on the terminal is there
+            // again after.
+            let mut screen = Screen::enter(out)?;
             let mut x: usize = 0;
             let mut y: usize = 0;
             while !game.puzzle.solved_by(&game.board) {
                 // Clear the screen, and draw the board, with the cursor.
-                out.put("\u{1b}[H\u{1b}[2J")?;
-                show::board_at(out, &game.puzzle, &game.board, Some(y * game.puzzle.width + x))?;
-                out.line("arrows move; f fills, x crosses, c clears, u undoes, q goes back")?;
+                screen.clear()?;
+                let at = Some(y * game.puzzle.width + x);
+                show::board_at(screen.out(), &game.puzzle, &game.board, at)?;
+                screen.out().line(
+                    "arrows move; f fills, x crosses, c clears, u undoes, q goes back",
+                )?;
                 match keys::read(&mut raw, clock)? {
                     Key::Up => y = if y > 0 { y - 1 } else { y },
                     Key::Down => y = if y + 1 < game.puzzle.height { y + 1 } else { y },
@@ -326,6 +333,7 @@ fn run(
                     Key::Other => {},
                 }
             }
+            screen.discard();
             raw.discard();
             moved(out, game)
         },
