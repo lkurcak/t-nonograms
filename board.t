@@ -59,7 +59,7 @@ impl Board {
     /// Makes row `y` what `line` says.
     pub fn put_row(&mut self, y: usize, line: &[Cell]) {
         let mut x: usize = 0;
-        for c in line.iter() {
+        for c in line {
             self.set(x, y, *c);
             x = x + 1;
         }
@@ -68,7 +68,7 @@ impl Board {
     /// Makes column `x` what `line` says.
     pub fn put_col(&mut self, x: usize, line: &[Cell]) {
         let mut y: usize = 0;
-        for c in line.iter() {
+        for c in line {
             self.set(x, y, *c);
             y = y + 1;
         }
@@ -142,15 +142,15 @@ impl Puzzle {
     /// The largest number in a clue, or 0 if they're all empty.
     pub fn largest_clue(&self) -> usize {
         let mut most: usize = 0;
-        for c in self.rows.iter() {
-            for b in c.iter() {
+        for c in &self.rows {
+            for b in c {
                 if *b > most {
                     most = *b;
                 }
             }
         }
-        for c in self.cols.iter() {
-            for b in c.iter() {
+        for c in &self.cols {
+            for b in c {
                 if *b > most {
                     most = *b;
                 }
@@ -183,7 +183,7 @@ impl Puzzle {
 pub fn clue_of(line: &[Cell]) -> List<usize> {
     let mut clue = List::new();
     let mut run: usize = 0;
-    for c in line.iter() {
+    for c in line {
         if *c == Filled {
             run = run + 1;
         } else if run > 0 {

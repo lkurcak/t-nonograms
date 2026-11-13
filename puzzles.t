@@ -114,7 +114,7 @@ fn draw(text: &str) -> Board {
     let rows = parse::words(text);
     let rows = rows.as_slice();
     let mut width: usize = 0;
-    for r in rows.iter() {
+    for r in rows {
         let n = r.chars().count();
         if n > width {
             width = n;
@@ -122,7 +122,7 @@ fn draw(text: &str) -> Board {
     }
     let mut board = Board::new(width, rows.len());
     let mut y: usize = 0;
-    for r in rows.iter() {
+    for r in rows {
         let mut x: usize = 0;
         for c in r.chars() {
             board.set(x, y, if c == '#' { Filled } else { Empty });
@@ -147,7 +147,7 @@ pub fn picture(i: usize) -> Option<Puzzle> {
 /// The picture named `name`, as a puzzle.
 pub fn named(name: &str) -> Option<Puzzle> {
     let mut i: usize = 0;
-    for pic in PICTURES.iter() {
+    for pic in &PICTURES {
         if pic.name == name {
             return picture(i);
         }
