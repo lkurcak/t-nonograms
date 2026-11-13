@@ -54,7 +54,7 @@ fn clue_width(clue: &[usize]) -> usize {
         return 1;
     }
     let mut n: usize = 0;
-    for b in clue.iter() {
+    for b in clue {
         n = n + digits(*b) + 1;
     }
     n - 1
@@ -71,7 +71,7 @@ fn clue<W: Write>(w: &mut W, clue: &[usize]) -> Result<(), W::Error> {
         return w.write_char('0');
     }
     let mut first = true;
-    for b in clue.iter() {
+    for b in clue {
         if !first {
             w.write_char(' ')?;
         }

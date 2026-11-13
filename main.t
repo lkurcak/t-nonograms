@@ -175,7 +175,7 @@ fn run(
 ) -> Result<(), std::io::Error> {
     match c {
         Help => {
-            for l in HELP.iter() {
+            for l in &HELP {
                 out.line(l)?;
             }
             Ok(())

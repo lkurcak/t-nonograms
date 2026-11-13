@@ -64,7 +64,7 @@ pub fn clues(text: &str) -> Option<List<List<usize>>> {
 fn joined(parts: &[&str]) -> String {
     let mut s = String::new();
     let mut first = true;
-    for p in parts.iter() {
+    for p in parts {
         if !first {
             s.push('|');
         }
@@ -79,13 +79,13 @@ fn clue_text(text: &str) -> String {
     let Some(lines) = clues(text) else { return String::from("none") };
     let mut s = String::new();
     let mut first = true;
-    for l in lines.iter() {
+    for l in &lines {
         if !first {
             s.push('|');
         }
         first = false;
         let mut first_block = true;
-        for b in l.iter() {
+        for b in l {
             if !first_block {
                 s.push(' ');
             }

@@ -65,7 +65,7 @@ fn count_empties(line: &[Cell]) -> List<usize> {
     let mut empties = List::with_capacity(line.len() + 1);
     let mut seen: usize = 0;
     empties.push(0);
-    for c in line.iter() {
+    for c in line {
         if *c == Empty {
             seen = seen + 1;
         }
@@ -232,7 +232,7 @@ fn cells(text: &str) -> List<Cell> {
 /// How `line` is drawn, as `cells` reads it, with `.` for unknown.
 fn text(line: &[Cell]) -> String {
     let mut s = String::new();
-    for c in line.iter() {
+    for c in line {
         s.push(match *c {
             Unknown => '.',
             Filled => '#',
@@ -255,9 +255,9 @@ fn solved(clue: &[usize], start: &str, want: &str) {
 
 #[test]
 fn overlap_of_blocks_is_filled() {
-    solved([3usize, 5].as_slice(), "..........", ".##..####.");
-    solved([8usize].as_slice(), "..........", "..######..");
-    solved([4usize, 5].as_slice(), "..........", "####x#####");
+    solved(&[3usize, 5], "..........", ".##..####.");
+    solved(&[8usize], "..........", "..######..");
+    solved(&[4usize, 5], "..........", "####x#####");
 }
 
 #[test]
@@ -269,22 +269,22 @@ fn an_empty_clue_empties_the_line() {
 #[test]
 fn known_cells_pin_blocks() {
     // A filled cell at the edge pins the block there.
-    solved([3usize].as_slice(), "#.........", "###xxxxxxx");
+    solved(&[3usize], "#.........", "###xxxxxxx");
     // Empty cells leave no room for a block before them.
-    solved([2usize].as_slice(), ".x...", "xx.#.");
+    solved(&[2usize], ".x...", "xx.#.");
     // A filled cell far right decides which block reaches it.
-    solved([1usize, 1].as_slice(), "......#", ".....x#");
+    solved(&[1usize, 1], "......#", ".....x#");
 }
 
 #[test]
 fn impossible_lines_are_contradictions() {
-    solved([6usize].as_slice(), ".....", "contradiction");
-    solved([2usize, 2].as_slice(), "....", "contradiction");
-    solved([1usize].as_slice(), "#.#", "contradiction");
+    solved(&[6usize], ".....", "contradiction");
+    solved(&[2usize, 2], "....", "contradiction");
+    solved(&[1usize], "#.#", "contradiction");
 }
 
 #[test]
 fn nothing_new_when_nothing_is_certain() {
-    solved([1usize].as_slice(), "...", "...");
-    solved([2usize].as_slice(), ".#.", ".#.");
+    solved(&[1usize], "...", "...");
+    solved(&[2usize], ".#.", ".#.");
 }
