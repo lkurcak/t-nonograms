@@ -90,7 +90,7 @@ fn clue_text(text: &str) -> String {
                 s.push(' ');
             }
             first_block = false;
-            s.put(b).into_ok();
+            s.put(b).unwrap();
         }
     }
     s
