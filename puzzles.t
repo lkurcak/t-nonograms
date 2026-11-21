@@ -103,9 +103,9 @@ pub fn describe(i: usize, out: &mut String) {
     out.push_str(pic.name);
     out.push_str(" (");
     let board = draw(pic.rows);
-    out.put(&board.width()).into_ok();
+    out.put(&board.width()).unwrap();
     out.push('x');
-    out.put(&board.height()).into_ok();
+    out.put(&board.height()).unwrap();
     out.push(')');
 }
 

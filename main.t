@@ -184,7 +184,7 @@ fn run(
         List => {
             for i in 0..puzzles::count() {
                 let mut text = String::new();
-                text.put(&(i + 1)).into_ok();
+                text.put(&(i + 1)).unwrap();
                 text.push_str(". ");
                 puzzles::describe(i, &mut text);
                 out.line(&text)?;
